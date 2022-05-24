@@ -1,0 +1,181 @@
+{
+    "acKind": "VMManifest",
+    "acVersion": "1.1.1",
+    "name": "foglamp-windmill-demo",
+    "displayName": "",
+    "description": "FogLamp application is modular architecture to connect sensors. Manage, store, and forward data to on-prem historian enterprise systems, and to any cloud.",
+    "owner": {
+        "user": "ZEDEDA",
+        "group": "Dianomic",
+        "company": "Dianomic",
+        "website": "https://dianomic.com",
+        "email": "info@dianomic.com"
+    },
+    "desc": {
+        "category": "",
+        "os": "",
+        "appCategory": "APP_CATEGORY_EDGE_APPLICATION",
+        "logo": {
+            "logo-app": "f0b29142-9833-11eb-b377-0258b6bea4f0_logo-app"
+        },
+        "screenshotList": {},
+        "licenseList": {
+            "Apache2.0": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        "support": "",
+        "agreementList": {}
+    },
+    "images": [
+        {
+            "imagename": "checking",
+            "maxsize": "3600000",
+            "preserve": true,
+            "target": "Disk",
+            "drvtype": "HDD",
+            "params": [],
+            "readonly": false,
+            "volumelabel": "",
+            "ignorepurge": false,
+            "cleartext": false,
+            "mountpath": ""
+        }
+    ],
+    "interfaces": [
+        {
+            "name": "eth0",
+            "type": "",
+            "optional": false,
+            "directattach": false,
+            "privateip": false,
+            "acls": [
+                {
+                    "matches": [
+                        {
+                            "type": "protocol",
+                            "value": "tcp"
+                        },
+                        {
+                            "type": "lport",
+                            "value": "8026"
+                        }
+                    ],
+                    "actions": [
+                        {
+                            "drop": false,
+                            "limit": false,
+                            "limitValue": null,
+                            "limitrate": 0,
+                            "limitunit": "",
+                            "limitburst": 0,
+                            "portmap": true,
+                            "portmapto": {
+                                "appPort": 22
+                            }
+                        }
+                    ],
+                    "name": ""
+                },
+                {
+                    "matches": [
+                        {
+                            "type": "protocol",
+                            "value": "tcp"
+                        },
+                        {
+                            "type": "lport",
+                            "value": "80"
+                        }
+                    ],
+                    "actions": [
+                        {
+                            "drop": false,
+                            "limit": false,
+                            "limitValue": null,
+                            "limitrate": 0,
+                            "limitunit": "",
+                            "limitburst": 0,
+                            "portmap": true,
+                            "portmapto": {
+                                "appPort": 80
+                            }
+                        }
+                    ],
+                    "name": ""
+                },
+                {
+                    "matches": [
+                        {
+                            "type": "protocol",
+                            "value": "tcp"
+                        },
+                        {
+                            "type": "lport",
+                            "value": "8081"
+                        }
+                    ],
+                    "actions": [
+                        {
+                            "drop": false,
+                            "limit": false,
+                            "limitValue": null,
+                            "limitrate": 0,
+                            "limitunit": "",
+                            "limitburst": 0,
+                            "portmap": true,
+                            "portmapto": {
+                                "appPort": 8081
+                            }
+                        }
+                    ],
+                    "name": ""
+                },
+                {
+                    "matches": [
+                        {
+                            "type": "ip",
+                            "value": "0.0.0.0/0"
+                        }
+                    ],
+                    "actions": [],
+                    "name": ""
+                }
+            ]
+        },
+        {
+            "name": "USB",
+            "type": "IO_TYPE_USB",
+            "optional": false,
+            "directattach": true,
+            "privateip": false,
+            "acls": []
+        }
+    ],
+    "permissions": [],
+    "vmmode": "HV_HVM",
+    "enablevnc": true,
+    "resources": [
+        {
+            "name": "cpus",
+            "value": "2"
+        },
+        {
+            "name": "memory",
+            "value": "2048000"
+        }
+    ],
+    "configuration": {
+        "customConfig": {
+            "name": "",
+            "add": true,
+            "override": true,
+            "allowStorageResize": false,
+            "fieldDelimiter": "",
+            "template": "",
+            "variableGroups": []
+        }
+    },
+    "containerDetail": null,
+    "module": null,
+    "appType": "APP_TYPE_VM",
+    "deploymentType": "DEPLOYMENT_TYPE_STAND_ALONE"
+}
