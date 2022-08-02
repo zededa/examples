@@ -1,0 +1,7 @@
+web:
+  image: nginx
+  ports:
+   - "30002:80"
+  environment:
+   - NGINX_HOST=foobar.com
+   - NGINX_PORT=80
