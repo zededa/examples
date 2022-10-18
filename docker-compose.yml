@@ -1,0 +1,11 @@
+version: '2'
+services:
+    nginx:
+        image: nginx:alpine
+        restart: always
+
+    apache:
+        depends_on:
+            - nginx
+        image: httpd:alpine
+        restart: always
