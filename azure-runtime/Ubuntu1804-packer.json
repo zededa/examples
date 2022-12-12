@@ -14,7 +14,7 @@
           [ "-smp", "cpus=2,maxcpus=16,cores=4" ]
 	],
     "vm_name": "Ubuntu-18.04-runtime",
-	"output_directory": "ubuntu-18.04-runtime-1.2",
+	"output_directory": "ubuntu-18.04-runtime-1.4",
 	"iso_url": "http://cdimage.ubuntu.com/releases/18.04/release/ubuntu-18.04.6-server-amd64.iso",
         "iso_checksum": "f5cbb8104348f0097a8e513b10173a07dbc6684595e331cb06f93f385d0aecf6",
 
