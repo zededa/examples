@@ -1,7 +1,8 @@
 import json
+import uuid
+
 
 def constructDs(args):
-
     print("=" * 100)
     zmethod = "Datastore Create global object"
     print(zmethod.center(70))
@@ -42,8 +43,8 @@ def constructDs(args):
 
     return 0, payload
 
-def imageCreate(args, dsId):
 
+def imageCreate(args, dsId):
     print("=" * 100)
     zmethod = "Image Create global object"
     print(zmethod.center(70))
@@ -65,8 +66,8 @@ def imageCreate(args, dsId):
 
     return 0, payload
 
-def imageUplink (zsession, args):
 
+def imageUplink(zsession, args):
     print("=" * 100)
     zmethod = "Image Uplink"
     print(zmethod.center(70))
@@ -90,9 +91,8 @@ def imageUplink (zsession, args):
 
     return 0
 
+
 def edgeAppCreate(zsession, args):
-
-
     print("=" * 100)
     zmethod = "Edge-app create Global Object"
     print(zmethod.center(70))
@@ -117,8 +117,8 @@ def edgeAppCreate(zsession, args):
         return 1
     return 0
 
-def updateDataStore(zsession, args):
 
+def updateDataStore(zsession, args):
     print("=" * 100)
     zmethod = "DataStore update to Global Object"
     print(zmethod.center(70))
@@ -139,8 +139,8 @@ def updateDataStore(zsession, args):
         return 1
     return 0
 
-def updateImage(zsession, args):
 
+def updateImage(zsession, args):
     print("=" * 100)
     zmethod = "Image update to Global Object"
     print(zmethod.center(70))
@@ -160,9 +160,8 @@ def updateImage(zsession, args):
         return 1
     return 0
 
+
 def updateEdgeApp(zsession, args):
-
-
     print("=" * 100)
     zmethod = "Edge-update update to Global Object"
     print(zmethod.center(70))
@@ -171,7 +170,7 @@ def updateEdgeApp(zsession, args):
     getUrl = f"/api/v1/apps/name/{args['<name>']}"
     status, response = zsession.get_request(getUrl)
     if status != 0:
-        print(f"Get edge-app failed {ars['<name>']} response {response}")
+        print(f"Get edge-app failed {args['<name>']} response {response}")
         return 1
 
     payload = response
@@ -185,7 +184,53 @@ def updateEdgeApp(zsession, args):
     return 0
 
 
+def jobEdgeApp(zsession, appName, serviceType):
+    data = {}
+    payload = {}
+    jobUUID = str(uuid.uuid4())
+    data['name'] = f"update-{serviceType}-{appName}-{jobUUID}"
+    api = f"/api/v1/jobs"
+    if serviceType == 'import':
+        data['operationType'] = "BULK_SERVICE_BUNDLE_IMPORT"
+    data["objectType"] = "OBJECT_TYPE_EDGE_APP"
+    status, response = zsession.post_request(api, data)
+    if status != 0:
+        print(f"Create {serviceType} job failed responses {response}")
+        return 1, None
+
+    return 0, data['name']
 
 
-    pass
+def edgeAppRefresh(zsession, args):
+    print("=" * 100)
+    zmethod = "Edge-app update refresh to global object"
+    print(zmethod.center(70))
+    print("=" * 100)
 
+    getUrl = f"/api/v1/apps/name/{args['<name>']}"
+    importUrl = f"/api/v1/jobs/apps/bundles/import"
+
+    importPayload = {
+        "bundleImport": {
+            "bundleConfig": [{
+                "name": args['<name>'],
+                "parentBundleId": ""
+            }]
+        },
+        "jobName": ""
+    }
+    status, response = zsession.get_request(getUrl)
+    if status != 0:
+        print(f"Get edge-app failed {args['<name>']} response {response}")
+        return 1
+
+    parentID = response['parentDetail']['idOfParentObject']
+    if response['parentDetail']['updateAvailable'] is True:
+        jStaus, jName = jobEdgeApp(zsession, args['<name>'], "import")
+        if jStaus != 0:
+            return 1
+        importPayload["bundleImport"]["bundleConfig"][0]["parentBundleId"] = parentID
+        importPayload["jobName"] = jName
+        impStatus, impResponse = zsession.put_request(importUrl, importPayload)
+
+    return 0

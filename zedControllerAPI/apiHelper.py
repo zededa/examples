@@ -12,6 +12,7 @@ Usage:
   apiHelper.py datastore update <name>
   apiHelper.py image update <name>
   apiHelper.py edge-app update <name>
+  apiHelper.py edge-app refresh <name>
 '''
 
 from docopt import docopt
@@ -76,7 +77,7 @@ def main():
     except Exception as e:
         print(e)
 
-    base_url = "https://zedcontrol.hummingbird.zededa.net"
+    base_url = "https://zedcontrol.canary.zededa.net"
     if args['login']:
         user_config = create_config(args['--username'], args['--password'])
         zsession = zapi(base_url, user_config)
@@ -116,6 +117,8 @@ def main():
         status = edgeAppCreate(zsession, args)
     elif args['edge-app'] and args['update']:
         updateStatus = updateEdgeApp(zsession, args)
+    elif args['edge-app'] and args['refresh']:
+        status = edgeAppRefresh(zsession, args)
 
 
 if __name__ == '__main__':

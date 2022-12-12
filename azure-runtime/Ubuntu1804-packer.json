@@ -1,0 +1,142 @@
+{
+    "variables": {
+        "hostname": "Azure-IoT-Edge",
+        "domain": "local",
+        "ssh_user": "pocuser",
+        "ssh_pass": "pocuser"
+    },
+    "builders": [{
+    "type": "qemu",
+	"headless": false,
+	"qemuargs": [
+          ["-display", "vnc=:0"],
+          [ "-m", "4096M" ],
+          [ "-smp", "cpus=2,maxcpus=16,cores=4" ]
+	],
+    "vm_name": "Ubuntu-18.04-runtime",
+	"output_directory": "ubuntu-18.04-runtime-1.4",
+	"iso_url": "http://cdimage.ubuntu.com/releases/18.04/release/ubuntu-18.04.6-server-amd64.iso",
+        "iso_checksum": "f5cbb8104348f0097a8e513b10173a07dbc6684595e331cb06f93f385d0aecf6",
+
+    "disk_interface": "virtio",
+    "net_device": "virtio-net",
+    "disk_size": "20000",
+	"disk_additional_size": ["2G", "2G", "20G","2G"],
+    "format": "qcow2",
+
+	"http_directory": "docroot",
+	"http_port_min": 8888,
+	"http_port_max": 8888,
+
+	"ssh_host_port_min": 2222,
+	"ssh_host_port_max": 2222,
+	"ssh_port": 22,
+	"ssh_wait_timeout": "2400s",
+    "ssh_username": "{{user `ssh_user`}}",
+    "ssh_password": "{{user `ssh_pass`}}",
+	"ssh_pty": "true",
+
+        "shutdown_command": "sudo /sbin/halt -p",
+        "boot_command": [
+            "<enter><wait><f6><esc><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs>",
+            "<bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs>",
+            "<bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs>",
+            "<bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs>",
+            "/install/vmlinuz<wait>",
+            " auto<wait>",
+            " console-setup/ask_detect=false<wait>",
+            " console-setup/layoutcode=us<wait>",
+            " console-setup/modelcode=pc105<wait>",
+            " debconf/frontend=noninteractive<wait>",
+            " debian-installer=en_US<wait>",
+            " fb=false<wait>",
+            " initrd=/install/initrd.gz<wait>",
+            " kbd-chooser/method=us<wait>",
+            " keyboard-configuration/layout=USA<wait>",
+            " keyboard-configuration/variant=USA<wait>",
+            " locale=en_US<wait>",
+            " netcfg/get_domain={{user `domain`}}<wait>",
+            " netcfg/get_hostname={{user `hostname`}}<wait>",
+            " grub-installer/bootdev=/dev/vda<wait>",
+            " noapic<wait>",
+            " preseed/url=http://{{ .HTTPIP }}:{{ .HTTPPort }}/preseed.cfg",
+            " -- <wait>",
+            "<enter><wait>"
+        ]
+    }],
+
+    "provisioners": [
+    {
+	"type": "shell",
+	"execute_command": "echo '{{user `ssh_pass`}}' | {{ .Vars }} sudo -E -S sh '{{ .Path }}'",
+	"inline": [
+		"echo '%sudo    ALL=(ALL)  NOPASSWD:ALL' >> /etc/sudoers"
+	]
+    },
+    {
+      "type": "file",
+      "source": "scripts/disk-partition.sh",
+      "destination": "/home/pocuser/disk-partition.sh"
+    },
+    {
+      "type": "shell",
+      "pause_before": "5s",
+      "inline": [
+        "cd ",
+        "chmod +x ./disk-partition.sh",
+        "sudo ./disk-partition.sh"
+      ]
+    },
+    {
+        "type": "shell",
+		"script": "./scripts/packages.sh"
+    },
+	{
+		"type": "file",
+		"source": "scripts/daemon.json",
+		"destination": "/home/pocuser/daemon.json"
+	},
+	{
+
+		"type": "file",
+		"source": "scripts/moby-install.sh",
+		"destination": "/home/pocuser/moby-install.sh"
+	},
+	{
+		"type": "file",
+		"source": "scripts/iotedge-install.sh",
+		"destination": "/home/pocuser/iotedge-install.sh"
+	},
+    {
+        "type": "file",
+        "source": "scripts/iotedge-config.sh",
+        "destination": "/home/pocuser/iotedge-config.sh"
+    },
+    {
+        "type": "shell",
+        "pause_before": "5s",
+        "inline": [
+            "sudo cp -rf /home/pocuser/iotedge-config.sh /etc/iotedge-config.sh",
+            "sudo chmod +x /etc/iotedge-config.sh"
+        ]
+    },
+    {
+      "type": "shell",
+      "pause_before": "5s",
+      "inline": [
+        "cd ",
+        "chmod +x ./moby-install.sh",
+        "sudo ./moby-install.sh"
+      ]
+    },
+    {
+      "type": "shell",
+      "pause_before": "5s",
+      "inline": [
+        "cd ",
+        "chmod +x ./iotedge-install.sh",
+		"sudo ./iotedge-install.sh"
+      ]
+    }
+    ]
+}
