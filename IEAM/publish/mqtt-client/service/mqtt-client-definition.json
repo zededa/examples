@@ -1,0 +1,26 @@
+{
+    "org": "zededa",
+    "label": "mqttclient-zededa",
+    "description": "",
+    "documentation": "",
+    "url": "zededa.mqttclient",
+    "version": "2.0.11",
+    "arch": "amd64",
+	"public": true,
+    "sharable": "singleton",
+    "requiredServices": [],
+    "userInput": [],
+    "deployment": {
+        "services": {
+            "zededa.mqttclient": {
+                "image": "efrecon/mqtt-client:2.0.11",
+		"command":[
+			"sub",
+			"-h",
+			"10.129.17.123",
+			"-t", "#", "-v"
+		]
+			}
+		}
+	}
+}
