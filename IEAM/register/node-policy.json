@@ -1,0 +1,13 @@
+{
+  "properties": [
+      { "name": "app01", "value": "mqtt" },
+      { "name": "app02", "value": "simulation" },
+      { "name": "app03", "value": "client" },
+      { "name": "app04", "value": "grafana" },
+      { "name": "openhorizon.allowPrivileged", "value": true }
+
+  ],
+  "constraints": [
+  ]
+}
+

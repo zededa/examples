@@ -1,0 +1,33 @@
+{
+    "org": "zededa",
+    "label": "mqttbroker-zededa",
+    "description": "",
+    "documentation": "",
+    "url": "zededa.mqttbroker",
+    "version": "1.6.12",
+    "arch": "amd64",
+	"public": true,
+    "sharable": "singleton",
+    "requiredServices": [],
+    "userInput": [],
+    "deployment": {
+        "services": {
+            "zededa.mqttbroker": {
+                "image": "eclipse-mosquitto:1.6.12",
+				"binds": [
+						"/home/pocuser/mosquitto.conf:/mosquitto/config/mosquitto.conf:rw"
+				],
+				"ports": [
+				{
+						"HostPort": "1883:1883/tcp",
+						"HostIP": "0.0.0.0"
+				},
+				{
+						"HostPort": "9001:9001/tcp",
+						"HostIP": "0.0.0.0"
+				}
+				]
+			}
+		}
+	}
+}
