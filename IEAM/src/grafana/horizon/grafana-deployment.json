@@ -1,0 +1,22 @@
+{
+    "label": "deploy-policy-grafana-amd64",
+    "description": "A biz policy for grafana on amd64",
+    "service": {
+        "name": "zededa.grafana",
+        "org": "zededa",
+        "arch": "amd64",
+        "serviceVersions": [
+            {
+                "version": "9.5.2",
+                "priority":{}
+            }
+        ]
+    },
+    "properties": [
+    ],
+    "constraints": [
+        "app04 == grafana"
+    ],
+    "userInput": [
+    ]
+}
