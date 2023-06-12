@@ -6,15 +6,22 @@
     "url": "zededa.mqttsimulator",
     "version": "1.0",
     "arch": "amd64",
-	"public": true,
+    "public": true,
     "sharable": "singleton",
-    "requiredServices": [],
+    "requiredServices": [
+	{
+            "org": "${HZN_ORG_ID}",
+            "url": "${HZN_ORG_ID}.mqttbroker",
+            "version": "1.6.12",
+            "arch": "${ARCH}"
+        }
+    ],
     "userInput": [],
     "deployment": {
         "services": {
             "zededa.mqttsimulator": {
                 "image": "sathiyadevzededa/mqtt-simulator:1.0"
-			}
-		}
-	}
+                        }
+                }
+        }
 }

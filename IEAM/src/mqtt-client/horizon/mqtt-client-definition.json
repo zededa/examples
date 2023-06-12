@@ -1,0 +1,39 @@
+{
+    "org": "zededa",
+    "label": "mqttclient-zededa",
+    "description": "",
+    "documentation": "",
+    "url": "zededa.mqttclient",
+    "version": "2.0.11",
+    "arch": "amd64",
+        "public": true,
+    "sharable": "singleton",
+    "requiredServices": [
+	    {
+            "org": "${HZN_ORG_ID}",
+            "url": "${HZN_ORG_ID}.mqttbroker",
+            "version": "1.6.12",
+            "arch": "${ARCH}"
+        },
+	{
+            "org": "${HZN_ORG_ID}",
+            "url": "${HZN_ORG_ID}.mqttsimulator",
+            "version": "1.0",
+            "arch": "${ARCH}"
+        }
+    ],
+    "userInput": [],
+    "deployment": {
+        "services": {
+            "zededa.mqttclient": {
+                "image": "efrecon/mqtt-client:2.0.11",
+                "command":[
+                        "sub",
+                        "-h",
+                        "${broker_ip}",
+                        "-t", "#", "-v"
+                ]
+                        }
+                }
+        }
+}

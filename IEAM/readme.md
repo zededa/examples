@@ -30,18 +30,13 @@ export HZN_EXCHANGE_USER_AUTH="iamapikey:{user-auth-token}"
 export HZN_EXCHANGE_URL={exchange_url}
 export HZN_FSS_CSSURL={CSS_url}
 
+Publish services and add deployment policy to IEAM exchange:
 
+	#export source 
+        source env.ibm
+	# Publish all services and add deployment
+        make publish-all
 
+Update node policy 
 
-
-
-Publish  Services: 
-  hzn exchange service publish  -f -O mqtt-definition.json –pull-image
-
-
-Add deployment policy:
- hzn exchange deployment addpolicy -f mqtt.deployment.json 
-
-
-Update node policy (deployment label):
- hzn policy update node-policy.json
+	hzn policy update node-policy.json
