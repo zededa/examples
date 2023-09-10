@@ -1,0 +1,9 @@
+{
+  "properties": [
+      { "name": "app04", "value": "grafana" },
+      { "name": "openhorizon.allowPrivileged", "value": true }
+
+  ],
+  "constraints": [
+  ]
+}
