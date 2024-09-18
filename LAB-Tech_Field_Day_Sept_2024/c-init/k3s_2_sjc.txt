@@ -1,0 +1,38 @@
+#cloud-config
+hostname: K3S-Instance-2
+users:
+  - default
+  - name: manny
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    groups: sudo
+    lock_passwd: false
+    plain_text_passwd: "<scrubbed>"
+    ssh_authorized_keys:
+      - <ssh public key>
+write_files:
+  - path: /etc/netplan/50-netcfg.yaml
+    permissions: '0644'
+    content: |
+      network:
+        version: 2
+        renderer: networkd
+        ethernets:
+          enp3s0:
+            dhcp4: true
+
+  - path: /etc/ssh/sshd_config
+    content: |
+      # Cloud-init modified SSH configuration
+      PasswordAuthentication yes
+
+runcmd:
+  - netplan apply
+  - apt-get update
+  - apt-get install -y openssh-server
+  - systemctl enable ssh
+  - systemctl start ssh
+  - curl -sfL https://get.k3s.io | sh -  # Install K3s
+  - systemctl enable k3s
+  - systemctl start k3s
+  - sleep 15  # Wait for 15 seconds
+  - CATTLE_AGENT_FALLBACK_PATH="/opt/bin" curl --insecure -fL https://<scrubbed>:20443/system-agent-install.sh | sudo CATTLE_AGENT_FALLBACK_PATH="/opt/bin" sh -s - --server https://<scrubbed>:20443 --label 'cattle.io/os=linux' --token <scrubbed> --ca-checksum <scrubbed> --etcd --controlplane --worker
