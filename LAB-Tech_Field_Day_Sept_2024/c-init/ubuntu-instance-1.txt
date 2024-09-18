@@ -1,0 +1,46 @@
+#cloud-config
+package_update: true
+package_upgrade: true
+
+hostname: Trusted-Ubuntu-Instance-1
+# Create a new user named 'manny' with the specified password and add SSH authorized key
+users:
+  - default
+  - name: manny
+    plain_text_passwd: "<scrubbed>"
+    lock_passwd: false
+    groups: sudo
+    shell: /bin/bash
+    ssh_authorized_keys:
+      - <ssh public key>
+# Configure netplan for two network interfaces
+write_files:
+  - path: /etc/netplan/01-netcfg.yaml
+    permissions: '0644'
+    content: |
+      network:
+        version: 2
+        renderer: networkd
+        ethernets:
+          enp3s0:
+            dhcp4: false
+            addresses:
+              - 10.0.0.11/24
+            gateway4: 10.0.0.1
+            nameservers:
+              addresses:
+                - 1.1.1.1
+                - 1.0.0.1
+
+  - path: /etc/ssh/sshd_config
+    content: |
+      # Cloud-init modified SSH configuration
+      PasswordAuthentication yes
+
+# Apply netplan configuration
+runcmd:
+  - netplan generate
+  - netplan apply
+  - apt-get install -y openssh-server
+  - systemctl enable ssh
+  - systemctl start ssh
