@@ -1,0 +1,98 @@
+#cloud-config
+package_update: true
+package_upgrade: true
+# Install Docker
+packages:
+  - apt-transport-https
+  - ca-certificates
+  - curl
+  - software-properties-common
+  - jq
+
+hostname: Rancher_1
+# Create a new user named 'manny' with the specified password and add SSH authorized key
+users:
+  - default
+  - name: manny
+    plain_text_passwd: "<scrubbed>"
+    lock_passwd: false
+    groups: sudo
+    shell: /bin/bash
+    ssh_authorized_keys:
+      - <ssh pub key>
+
+# Configure netplan for two network interfaces
+write_files:
+  - path: /etc/netplan/01-netcfg.yaml
+    permissions: '0644'
+    content: |
+      network:
+        version: 2
+        renderer: networkd
+        ethernets:
+          enp3s0:
+            dhcp4: true
+
+# Apply netplan configuration
+runcmd:
+  - netplan generate
+  - netplan apply
+
+# Enable and start the SSH service for remote login
+ssh_pwauth: true
+runcmd:
+# Add 'manny' to the Docker group
+  - usermod -aG docker manny
+
+#Enable and Start SSH
+  - systemctl enable ssh
+  - systemctl start ssh
+
+# Install Docker
+  - curl -fsSL https://get.docker.com | sh
+  - docker pull rancher/rancher:latest
+  - docker run -d --restart=unless-stopped -p 1080:80 -p 10443:443 --privileged rancher/rancher
+  - |
+    (
+      echo "Waiting for Rancher to be fully initialized..."
+      TIMEOUT=600  # 10 minutes
+      INTERVAL=15
+      while [ $TIMEOUT -gt 0 ]; do
+        if curl -k --silent https://127.0.0.1:10443/v3/settings/cacerts > /dev/null; then
+          echo "Rancher is fully initialized."
+          # Obtain the initial password from Rancher's logs
+          INITIAL_PASSWORD=$(sudo docker logs $(sudo docker ps -qf "ancestor=rancher/rancher") 2>&1 | grep "Bootstrap Password:" | awk '{print $NF}')
+          
+          if [ -z "$INITIAL_PASSWORD" ]; then
+            echo "Failed to retrieve the initial password from the logs."
+            exit 1
+          fi
+          
+          # Authenticate and get a token
+          TOKEN=$(curl -k -s -X POST "https://127.0.0.1:10443/v3-public/localProviders/local?action=login" \
+            -H 'Content-Type: application/json' \
+            -d '{"username":"admin","password":"'"$INITIAL_PASSWORD"'"}' | jq -r .token)
+          
+          if [ "$TOKEN" == "null" ]; then
+            echo "Failed to authenticate and obtain a token."
+            exit 1
+          fi
+          
+          # Change the password
+          RESPONSE=$(curl -k -s -X POST "https://127.0.0.1:10443/v3/users?action=changepassword" \
+            -H "Authorization: Bearer $TOKEN" \
+            -H 'Content-Type: application/json' \
+            -d '{"currentPassword":"'"$INITIAL_PASSWORD"'","newPassword":"<scrubbed>"}')
+          
+          echo "Password change response: $RESPONSE"
+          break
+        else
+          echo "Rancher is still initializing. Sleeping for $INTERVAL seconds..."
+          sleep $INTERVAL
+          TIMEOUT=$((TIMEOUT - INTERVAL))
+        fi
+      done
+      if [ $TIMEOUT -le 0 ]; then
+        echo "Rancher failed to initialize within the timeout period."
+      fi
+    ) &
