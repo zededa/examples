@@ -1,0 +1,20 @@
+{{- if .Values.client.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "edge-ai-car-classification.fullname" . }}-client
+  labels:
+  {{- include "edge-ai-car-classification.client.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.client.service.type }}
+  ports:
+    - port: {{ .Values.client.service.port }}
+      targetPort: {{ .Values.client.service.targetPort }}
+      protocol: TCP
+      name: http
+      {{- if and (eq .Values.client.service.type "NodePort") .Values.client.service.nodePort }}
+      nodePort: {{ .Values.client.service.nodePort }}
+      {{- end }}
+  selector:
+  {{- include "edge-ai-car-classification.client.selectorLabels" . | nindent 4 }}
+{{- end }}

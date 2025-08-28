@@ -1,0 +1,22 @@
+apiVersion: v2
+name: edge-ai-car-classification
+description: EdgeAI Car classification - A comprehensive ML inference platform with OpenVINO Model Server, dynamic model loading from MinIO, and web-based client interface
+type: application
+version: 2.4.0
+appVersion: "v5.5"
+keywords:
+  - edgeai
+  - machine-learning
+  - inference
+  - openvino
+  - minio
+  - kubernetes
+  - car-classification
+home: https://github.com/adithya-zededa/edge-ai-car-classification
+sources:
+  - https://github.com/adithya-zededa/edge-ai-car-classification
+maintainers:
+  - name: EdgeAI Team
+    email: adithya@zededa.com
+
+# MinIO is now external - no subchart dependencies needed

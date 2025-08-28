@@ -1,0 +1,26 @@
+{{- if .Values.server.enabled -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "edge-ai-car-classification.ovms.serviceName" . }}
+  labels:
+  {{- include "edge-ai-car-classification.server.labels" . | nindent 4 }}
+    app.kubernetes.io/component: service
+  {{- with .Values.service.ovms.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: {{ .Values.service.ovms.type }}
+  ports:
+    - port: {{ .Values.service.ovms.ports.grpc }}
+      targetPort: grpc
+      protocol: TCP
+      name: grpc
+    - port: {{ .Values.service.ovms.ports.rest }}
+      targetPort: rest
+      protocol: TCP
+      name: rest
+  selector:
+  {{- include "edge-ai-car-classification.server.selectorLabels" . | nindent 4 }}
+{{- end }}
