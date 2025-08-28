@@ -1,0 +1,1691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EdgeAI Car Classification - Demo Server on the Edge Cluster</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: #f7f7fa;
+        min-height: 100vh;
+    }
+    
+    /* Main container with improved 2-column layout */
+    .container {
+        display: grid;
+        grid-template-columns: 1fr 1.5fr;
+        gap: 30px;
+        margin: 0 auto;
+        max-width: 1400px;
+        background: #fff;
+        border-radius: 12px;
+        border: 1px solid #d0d0d0;
+        box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+        padding: 30px;
+        min-height: calc(100vh - 140px);
+        margin-top: 20px;
+        margin-bottom: 80px;
+    }
+    
+    .section {
+        padding: 20px;
+        border-radius: 8px;
+        background: #f9f9f9;
+        border: 1px solid #e0e0e0;
+        border-left: 3px solid #d0d0d0;
+        margin-bottom: 20px;
+    }
+    
+    .section h2 {
+        font-size: 1.3em;
+        color: #555;
+        margin-bottom: 18px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        text-align: center;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        justify-content: center;
+    }
+    
+    /* Left Panel - Image and Upload */
+    .left-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+    
+    /* Image preview section */
+    .image-preview {
+        text-align: center;
+    }
+    
+    .image-preview img {
+        max-width: 100%;
+        max-height: 400px;
+        border-radius: 12px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.10);
+        background: #eee;
+        margin: 10px auto;
+        display: block;
+    }
+    
+    .preview-placeholder {
+        padding: 60px 20px;
+        color: #999;
+        text-align: center;
+        border: 2px dashed #ddd;
+        border-radius: 12px;
+        background: #fafafa;
+    }
+    
+    .preview-placeholder i {
+        font-size: 4em;
+        margin-bottom: 15px;
+        display: block;
+    }
+    
+    /* Upload section */
+    .upload-container {
+        width: 100%;
+        margin-bottom: 20px;
+    }
+    
+    .upload-zone {
+        border: 2px dashed #ccc;
+        border-radius: 8px;
+        padding: 30px 20px;
+        text-align: center;
+        cursor: pointer;
+        background: #fafafa;
+        transition: all 0.3s ease;
+        margin-bottom: 15px;
+    }
+    
+    .upload-zone:hover {
+        border-color: rgba(255, 87, 34, 0.4);
+        background: rgba(255, 87, 34, 0.05);
+    }
+    
+    .upload-zone.dragover {
+        border-color: rgba(255, 87, 34, 0.6);
+        background: rgba(255, 87, 34, 0.1);
+        transform: scale(1.02);
+    }
+    
+    select, button {
+        width: 100%;
+        font-size: 1em;
+        padding: 12px 18px;
+        border-radius: 8px;
+        border: 1px solid #ccc;
+        margin-bottom: 15px;
+        background: #f9f9f9;
+        box-sizing: border-box;
+    }
+    
+    button {
+        background: #fff;
+        color: #333;
+        font-weight: bold;
+        cursor: pointer;
+        border: 2px solid #d0d0d0;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.09);
+        transition: all 0.2s ease;
+    }
+    
+    button:hover {
+        background: rgba(255, 87, 34, 0.1);
+        border-color: rgba(255, 87, 34, 0.5);
+        color: #ff5722;
+        transform: translateY(-1px);
+    }
+    
+    button:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+        transform: none;
+    }
+    
+    /* Right Panel - Switchable Results/Logs */
+    .right-panel {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+    
+    .switchable-panel {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        background: #f9f9f9;
+        border: 1px solid #d0d0d0;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    
+    /* Tab system */
+    .panel-tabs {
+        display: flex;
+        background: #e9ecef;
+        border-bottom: 1px solid #e0e0e0;
+    }
+    
+    .tab-button {
+        flex: 1;
+        padding: 15px 20px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-weight: 600;
+        color: #6c757d;
+        transition: all 0.3s ease;
+        position: relative;
+        font-size: 1em;
+    }
+    
+    .tab-button.active {
+        color: #ff5722;
+        background: #fff;
+    }
+    
+    .tab-button.active::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: rgba(255, 87, 34, 0.6);
+    }
+    
+    .tab-content {
+        flex: 1;
+        padding: 20px;
+        display: none;
+        overflow-y: auto;
+        height: 500px;
+    }
+    
+    .tab-content.active {
+        display: block;
+    }
+    
+    /* Results content */
+    .prediction-result {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 15px;
+        border-left: 4px solid #00c6d7;
+    }
+    
+    .prediction-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 12px;
+        margin: 5px 0;
+        background: rgba(0, 198, 215, 0.1);
+        border-radius: 4px;
+    }
+    
+    .prediction-item.top {
+        background: rgba(0, 198, 215, 0.2);
+        font-weight: bold;
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-top: 15px;
+        padding-top: 15px;
+        border-top: 1px solid #ddd;
+    }
+    
+    .stat-item {
+        text-align: center;
+        padding: 10px;
+        background: #fff;
+        border-radius: 6px;
+        border: 1px solid #e0e0e0;
+    }
+    
+    .stat-label {
+        font-size: 0.8rem;
+        color: #666;
+        margin-bottom: 5px;
+    }
+    
+    .stat-value {
+        font-weight: 600;
+        font-size: 1.1rem;
+        color: #333;
+    }
+    
+    /* Processing section styles */
+    .processing-section {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .processing-result {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 15px;
+        border-left: 4px solid #17a2b8;
+    }
+    
+    .processing-steps {
+        margin-top: 15px;
+    }
+    
+    .step-item {
+        background: #fff;
+        border-radius: 6px;
+        margin-bottom: 12px;
+        border: 1px solid #e0e0e0;
+        overflow: hidden;
+    }
+    
+    .step-header {
+        background: #f8f9fa;
+        padding: 12px 15px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 600;
+        color: #495057;
+        border-bottom: 1px solid #e0e0e0;
+    }
+    
+    .step-details {
+        padding: 12px 15px;
+        color: #6c757d;
+        font-size: 0.9em;
+    }
+    
+    .step-details p {
+        margin: 0;
+        line-height: 1.4;
+    }
+    
+    .step-details .detail-item {
+        display: flex;
+        justify-content: space-between;
+        margin: 4px 0;
+    }
+    
+    .timing-breakdown {
+        margin-top: 20px;
+        padding-top: 15px;
+        border-top: 1px solid #e0e0e0;
+    }
+    
+    .timing-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        margin-top: 10px;
+    }
+    
+    .timing-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 12px;
+        background: #fff;
+        border-radius: 4px;
+        border: 1px solid #e0e0e0;
+    }
+    
+    .timing-label {
+        font-size: 0.8rem;
+        color: #666;
+    }
+    
+    .timing-value {
+        font-weight: 600;
+        color: #333;
+    }
+    
+    /* Metadata section styles */
+    .metadata-section {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .metadata-result {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 15px;
+        border-left: 4px solid #6f42c1;
+    }
+    
+    .metadata-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-top: 15px;
+    }
+    
+    .metadata-item {
+        background: #fff;
+        border-radius: 6px;
+        padding: 12px 15px;
+        border: 1px solid #e0e0e0;
+    }
+    
+    .metadata-label {
+        font-size: 0.8rem;
+        color: #666;
+        margin-bottom: 5px;
+        font-weight: 500;
+    }
+    
+    .metadata-value {
+        font-weight: 600;
+        color: #333;
+        word-break: break-word;
+    }
+    
+    .model-description {
+        margin-top: 20px;
+        padding-top: 15px;
+        border-top: 1px solid #e0e0e0;
+    }
+    
+    .description-content {
+        background: #fff;
+        border-radius: 6px;
+        padding: 15px;
+        border: 1px solid #e0e0e0;
+        margin-top: 10px;
+    }
+    
+    .description-content p {
+        margin: 0 0 10px 0;
+        line-height: 1.5;
+    }
+    
+    .description-content ul {
+        margin: 10px 0;
+        padding-left: 20px;
+    }
+    
+    .description-content li {
+        margin: 5px 0;
+    }
+    
+    /* API Endpoints styling */
+    .endpoints-section {
+        margin-top: 20px;
+    }
+    
+    .endpoint-item {
+        background: #f8f9fa;
+        border-radius: 6px;
+        padding: 15px;
+        margin: 15px 0;
+        border-left: 3px solid #007bff;
+    }
+    
+    .endpoint-item h6 {
+        color: #495057;
+        margin-bottom: 8px;
+        font-weight: 600;
+    }
+    
+    .endpoint-item p {
+        margin: 8px 0;
+        color: #6c757d;
+        font-size: 0.9em;
+    }
+    
+    .code-block {
+        background: #2d3748;
+        color: #e2e8f0;
+        padding: 12px;
+        border-radius: 4px;
+        margin: 10px 0;
+        font-family: 'Courier New', monospace;
+        font-size: 0.85em;
+        overflow-x: auto;
+        border: 1px solid #4a5568;
+    }
+    
+    .code-block code {
+        background: none;
+        color: inherit;
+        padding: 0;
+        font-size: inherit;
+        white-space: pre-wrap;
+        word-break: break-all;
+    }
+    
+    .model-info {
+        margin-top: 20px;
+        padding-top: 15px;
+        border-top: 1px solid #e0e0e0;
+    }
+    
+    .model-info h5 {
+        color: #495057;
+        margin-bottom: 10px;
+    }
+    
+    .model-info ul {
+        margin: 10px 0;
+        padding-left: 20px;
+    }
+    
+    .model-info li {
+        margin: 5px 0;
+        color: #6c757d;
+    }
+
+    /* Logs section with more space */
+    .logs-section {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .log-controls {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+    
+    .log-controls button {
+        flex: 1;
+        padding: 8px 12px;
+        font-size: 0.9em;
+        margin-bottom: 0;
+    }
+    
+    .log-controls select {
+        flex: 2;
+        padding: 8px 12px;
+        font-size: 0.9em;
+        margin-bottom: 0;
+    }
+    
+    .logs-container {
+        background: #2d3748;
+        color: #e2e8f0;
+        border-radius: 6px;
+        padding: 15px;
+        font-family: 'Courier New', monospace;
+        font-size: 0.85em;
+        flex: 1;
+        overflow-y: auto;
+        border: 1px solid #4a5568;
+        min-height: 400px;
+    }
+    
+    .log-entry {
+        margin-bottom: 8px;
+        padding: 6px 10px;
+        border-radius: 4px;
+        border-left: 3px solid transparent;
+        animation: slideIn 0.3s ease-out;
+    }
+    
+    .log-entry.info { border-left-color: #3182ce; background: rgba(49, 130, 206, 0.1); }
+    .log-entry.success { border-left-color: #38a169; background: rgba(56, 161, 105, 0.1); }
+    .log-entry.warning { border-left-color: #d69e2e; background: rgba(214, 158, 46, 0.1); }
+    .log-entry.error { border-left-color: #e53e3e; background: rgba(229, 62, 62, 0.1); }
+    
+    .log-timestamp {
+        color: #a0aec0;
+        font-size: 0.8em;
+    }
+    
+    .log-content {
+        margin-left: 10px;
+        display: inline;
+    }
+    
+    .endpoint-log {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 6px 10px;
+        margin-bottom: 6px;
+        background: #1a202c;
+        border-radius: 4px;
+        border-left: 3px solid #4299e1;
+    }
+    
+    .endpoint-info {
+        flex: 1;
+    }
+    
+    .endpoint-time {
+        color: #68d391;
+        font-weight: bold;
+        font-size: 0.9em;
+    }
+    
+    .endpoint-method {
+        color: #f7fafc;
+        font-weight: bold;
+        margin-right: 8px;
+    }
+    
+    .endpoint-url {
+        color: #bee3f8;
+    }
+    
+    /* Loading and states */
+    .loading {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+    
+    .spinner {
+        border: 3px solid #f3f3f3;
+        border-top: 3px solid #3498db;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        animation: spin 1s linear infinite;
+        margin-right: 10px;
+    }
+    
+    .error-message {
+        background: #ffebee;
+        color: #c62828;
+        border: 1px solid #e57373;
+        border-radius: 6px;
+        padding: 12px;
+        margin-top: 10px;
+    }
+    
+    .success-message {
+        background: #e8f5e8;
+        color: #2e7d32;
+        border: 1px solid #81c784;
+        border-radius: 6px;
+        padding: 12px;
+        margin-top: 10px;
+    }
+    
+    /* Animations */
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    @keyframes slideIn {
+        from { opacity: 0; transform: translateX(-10px); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+    
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.7; }
+    }
+    
+    .pulse {
+        animation: pulse 1.5s ease-in-out infinite;
+    }
+    
+    /* Responsive design */
+    @media (max-width: 1200px) {
+        .container {
+            grid-template-columns: 1fr;
+            gap: 20px;
+            margin: 10px;
+            padding: 20px;
+        }
+        
+        .stats-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .container {
+            margin: 5px;
+            padding: 15px;
+        }
+        
+        .section {
+            padding: 15px;
+        }
+        
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .tab-content {
+            height: 300px;
+        }
+        
+        .logs-container {
+            min-height: 250px;
+        }
+    }
+    
+    /* Banner */
+    .banner {
+        background: #fff;
+        color: #333;
+        text-align: center;
+        font-size: 1.2em;
+        font-weight: bold;
+        border-radius: 8px;
+        border: 2px solid #d0d0d0;
+        width: 100%;
+        margin: 0;
+        padding: 15px;
+        box-shadow: 0 1px 8px rgba(0,0,0,0.07);
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 100;
+    }
+    </style>
+</head>
+<body>
+    <div class="header-bar" style="display:flex; align-items:center; justify-content:flex-start; padding:24px 0 24px 40px; background:#fff; border-bottom:3px solid #d0d0d0; box-shadow:0 2px 12px rgba(0,0,0,0.08);">
+        <img src="https://zededa.com/wp-content/uploads/2022/12/mk1.png" alt="ZEDEDA Logo" style="height:54px; width:auto; margin-right:28px; vertical-align:middle; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+        <span style="font-size:1.6em; font-weight:600; color:#333; letter-spacing:0.5px; vertical-align:middle;">Car Classification on Zededa Edge AI</span>
+    </div>
+    
+    <div class="container">
+        <!-- Left Panel: Image Preview and Upload -->
+        <div class="left-panel">
+            <!-- Image Upload Section -->
+            <div class="section">
+                <h2><i class="fas fa-upload"></i> Upload Image</h2>
+                <div class="upload-container">
+                    <div id="uploadZone" class="upload-zone">
+                        <i class="fas fa-cloud-upload-alt" style="font-size: 2em; color: #ccc; margin-bottom: 10px;"></i>
+                        <p>Drag & drop an image here or click to select</p>
+                        <input type="file" id="imageInput" accept="image/*" style="display: none;">
+                    </div>
+                    <select id="modelSelect">
+                        <option value="">Select a model...</option>
+                        {% for model in models %}
+                        <option value="{{ model }}">{{ model.replace('_', ' ').title() }}</option>
+                        {% endfor %}
+                    </select>
+                    <button id="classifyBtn" onclick="classifyImage()" disabled>
+                        <i class="fas fa-brain"></i> Classify Image
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Image Preview Section -->
+            <div class="section image-preview">
+                <h2><i class="fas fa-image"></i> Image Preview</h2>
+                <div id="imagePreview" class="preview-placeholder">
+                    <i class="fas fa-image"></i>
+                    <p>No image selected</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel: Switchable Results/Logs/Processing/Metadata -->
+        <div class="right-panel">
+            <div class="switchable-panel">
+                <!-- Tab Navigation -->
+                <div class="panel-tabs">
+                    <button class="tab-button active" onclick="switchTab('results')" id="resultsTab">
+                        <i class="fas fa-chart-bar"></i> Results
+                    </button>
+                    <button class="tab-button" onclick="switchTab('processing')" id="processingTab">
+                        <i class="fas fa-cogs"></i> Processing
+                    </button>
+                    <button class="tab-button" onclick="switchTab('metadata')" id="metadataTab">
+                        <i class="fas fa-info-circle"></i> Model Info
+                    </button>
+                    <button class="tab-button" onclick="switchTab('logs')" id="logsTab">
+                        <i class="fas fa-terminal"></i> System Logs
+                    </button>
+                </div>
+                
+                <!-- Results Tab Content -->
+                <div id="resultsContent" class="tab-content active">
+                    <div id="resultsSection">
+                        <div class="loading" style="display: none;" id="loadingIndicator">
+                            <div class="spinner"></div>
+                            <span>Analyzing image...</span>
+                        </div>
+                        
+                        <div id="predictionResults" style="display: none;">
+                            <div class="prediction-result">
+                                <h3><i class="fas fa-trophy"></i> Top Predictions</h3>
+                                <div id="topPredictions"></div>
+                                
+                                <div class="stats-grid">
+                                    <div class="stat-item">
+                                        <div class="stat-label">Confidence</div>
+                                        <div class="stat-value" id="topConfidence">-</div>
+                                    </div>
+                                    <div class="stat-item">
+                                        <div class="stat-label">Model Used</div>
+                                        <div class="stat-value" id="modelUsed">-</div>
+                                    </div>
+                                    <div class="stat-item">
+                                        <div class="stat-label">Processing Time</div>
+                                        <div class="stat-value" id="processingTime">-</div>
+                                    </div>
+                                    <div class="stat-item">
+                                        <div class="stat-label">Image Size</div>
+                                        <div class="stat-value" id="imageSize">-</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="noResults" style="text-align: center; color: #666; padding: 40px;">
+                            <i class="fas fa-search" style="font-size: 3em; margin-bottom: 15px; opacity: 0.3;"></i>
+                            <p>Upload and classify an image to see results</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Processing Tab Content -->
+                <div id="processingContent" class="tab-content">
+                    <div class="processing-section">
+                        <div id="imageProcessingInfo" style="display: none;">
+                            <div class="processing-result">
+                                <h3><i class="fas fa-cogs"></i> Image Processing Steps</h3>
+                                
+                                <div class="processing-steps">
+                                    <div class="step-item">
+                                        <div class="step-header">
+                                            <i class="fas fa-upload"></i>
+                                            <span>1. Image Upload</span>
+                                        </div>
+                                        <div class="step-details" id="uploadDetails">
+                                            <p>No image uploaded yet</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="step-item">
+                                        <div class="step-header">
+                                            <i class="fas fa-resize"></i>
+                                            <span>2. Image Preprocessing</span>
+                                        </div>
+                                        <div class="step-details" id="preprocessDetails">
+                                            <p>Waiting for image processing...</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="step-item">
+                                        <div class="step-header">
+                                            <i class="fas fa-brain"></i>
+                                            <span>3. Model Inference</span>
+                                        </div>
+                                        <div class="step-details" id="inferenceDetails">
+                                            <p>Waiting for inference...</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="step-item">
+                                        <div class="step-header">
+                                            <i class="fas fa-chart-line"></i>
+                                            <span>4. Post-processing</span>
+                                        </div>
+                                        <div class="step-details" id="postprocessDetails">
+                                            <p>Waiting for results...</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="timing-breakdown" id="timingBreakdown" style="display: none;">
+                                    <h4><i class="fas fa-stopwatch"></i> Timing Breakdown</h4>
+                                    <div class="timing-grid">
+                                        <div class="timing-item">
+                                            <span class="timing-label">Model Check</span>
+                                            <span class="timing-value" id="timingModelCheck">-</span>
+                                        </div>
+                                        <div class="timing-item">
+                                            <span class="timing-label">Preprocessing</span>
+                                            <span class="timing-value" id="timingPreprocess">-</span>
+                                        </div>
+                                        <div class="timing-item">
+                                            <span class="timing-label">Inference</span>
+                                            <span class="timing-value" id="timingInference">-</span>
+                                        </div>
+                                        <div class="timing-item">
+                                            <span class="timing-label">Post-processing</span>
+                                            <span class="timing-value" id="timingPostprocess">-</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="noProcessingInfo" style="text-align: center; color: #666; padding: 40px;">
+                            <i class="fas fa-cogs" style="font-size: 3em; margin-bottom: 15px; opacity: 0.3;"></i>
+                            <p>Process an image to see detailed processing steps</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Model Metadata Tab Content -->
+                <div id="metadataContent" class="tab-content">
+                    <div class="metadata-section">
+                        <div id="modelMetadataInfo" style="display: none;">
+                            <div class="metadata-result">
+                                <h3><i class="fas fa-info-circle"></i> Model Information</h3>
+                                
+                                <div class="metadata-grid">
+                                    <div class="metadata-item">
+                                        <div class="metadata-label">Model Name</div>
+                                        <div class="metadata-value" id="metaModelName">-</div>
+                                    </div>
+                                    <div class="metadata-item">
+                                        <div class="metadata-label">Framework</div>
+                                        <div class="metadata-value" id="metaFramework">-</div>
+                                    </div>
+                                    <div class="metadata-item">
+                                        <div class="metadata-label">Input Shape</div>
+                                        <div class="metadata-value" id="metaInputShape">-</div>
+                                    </div>
+                                    <div class="metadata-item">
+                                        <div class="metadata-label">Model Type</div>
+                                        <div class="metadata-value" id="metaModelType">-</div>
+                                    </div>
+                                    <div class="metadata-item">
+                                        <div class="metadata-label">Classes</div>
+                                        <div class="metadata-value" id="metaNumClasses">-</div>
+                                    </div>
+                                    <div class="metadata-item">
+                                        <div class="metadata-label">Status</div>
+                                        <div class="metadata-value" id="metaStatus">-</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="model-description" id="modelDescription" style="display: none;">
+                                    <h4><i class="fas fa-file-alt"></i> Model Description</h4>
+                                    <div class="description-content" id="descriptionContent">
+                                        <p>Loading model information...</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="noMetadataInfo" style="text-align: center; color: #666; padding: 40px;">
+                            <i class="fas fa-info-circle" style="font-size: 3em; margin-bottom: 15px; opacity: 0.3;"></i>
+                            <p>Select a model to see detailed information</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Logs Tab Content -->
+                <div id="logsContent" class="tab-content">
+                    <div class="logs-section">
+                        <div class="log-controls">
+                            <button onclick="clearLogs()" title="Clear all logs">
+                                <i class="fas fa-trash"></i> Clear
+                            </button>
+                            <button onclick="toggleAutoScroll()" id="autoScrollBtn" title="Toggle auto-scroll">
+                                <i class="fas fa-arrows-alt-v"></i> Auto-scroll: ON
+                            </button>
+                            <select id="logFilter" onchange="filterLogs()" title="Filter log types">
+                                <option value="all">All Activity</option>
+                                <option value="processing">Processing Steps</option>
+                                <option value="endpoint">API Calls</option>
+                                <option value="system">System Events</option>
+                            </select>
+                        </div>
+                        
+                        <div id="unifiedLogs" class="logs-container">
+                            <div class="log-entry info">
+                                <span class="log-timestamp">[System]</span>
+                                <span class="log-content">System ready - all activity will be logged here...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="banner">GPU Support will be coming soon</div>
+    
+    <script>
+    // Global variables
+    let currentLogType = 'all';
+    let autoScroll = true;
+    let logPollingInterval;
+    let selectedImageFile = null;
+    
+    // Initialize when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        setupEventListeners();
+        startLogPolling();
+        logMessage('System', 'Interface loaded and ready for image classification', 'info', 'system');
+        
+        // Set up model selection change listener
+        const modelSelect = document.getElementById('modelSelect');
+        if (modelSelect) {
+            modelSelect.addEventListener('change', function() {
+                // If metadata tab is active, reload metadata
+                const metadataTab = document.getElementById('metadataTab');
+                if (metadataTab && metadataTab.classList.contains('active')) {
+                    loadModelMetadata();
+                }
+            });
+        }
+    });
+    
+    function setupEventListeners() {
+        const imageInput = document.getElementById('imageInput');
+        const uploadZone = document.getElementById('uploadZone');
+        
+        // File input handling
+        imageInput.addEventListener('change', handleFileSelection);
+        
+        // Drag and drop functionality
+        uploadZone.addEventListener('click', () => imageInput.click());
+        uploadZone.addEventListener('dragover', handleDragOver);
+        uploadZone.addEventListener('dragleave', handleDragLeave);
+        uploadZone.addEventListener('drop', handleDrop);
+    }
+    
+    function handleFileSelection(e) {
+        const file = e.target.files[0];
+        if (file) {
+            selectedImageFile = file;
+            displayImagePreview(file);
+            enableClassifyButton();
+            logMessage('File Selection', `Selected: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`, 'info', 'system');
+        }
+    }
+    
+    function handleDragOver(e) {
+        e.preventDefault();
+        e.currentTarget.classList.add('dragover');
+    }
+    
+    function handleDragLeave(e) {
+        e.preventDefault();
+        e.currentTarget.classList.remove('dragover');
+    }
+    
+    function handleDrop(e) {
+        e.preventDefault();
+        e.currentTarget.classList.remove('dragover');
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            const imageInput = document.getElementById('imageInput');
+            imageInput.files = files;
+            handleFileSelection({ target: { files: files } });
+        }
+    }
+    
+    function displayImagePreview(file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const imagePreview = document.getElementById('imagePreview');
+            imagePreview.innerHTML = `<img src="${e.target.result}" alt="Selected image" style="max-width: 100%; max-height: 400px; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.10);">`;
+        };
+        reader.readAsDataURL(file);
+    }
+    
+    function enableClassifyButton() {
+        const classifyBtn = document.getElementById('classifyBtn');
+        classifyBtn.disabled = false;
+    }
+    
+    async function classifyImage() {
+        if (!selectedImageFile) {
+            alert('Please select an image first');
+            return;
+        }
+        
+        const modelSelect = document.getElementById('modelSelect');
+        const selectedModel = modelSelect.value;
+        
+        if (!selectedModel) {
+            alert('Please select a model');
+            return;
+        }
+        
+        // Show loading state
+        showLoading(true);
+        logMessage('Classification', `Starting classification with model: ${selectedModel}`, 'info', 'processing');
+        
+        // Create form data
+        const formData = new FormData();
+        formData.append('image', selectedImageFile);
+        formData.append('model', selectedModel);
+        
+        try {
+            const response = await fetch('/predict', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const result = await response.json();
+            
+            showLoading(false);
+            
+            if (result.success) {
+                displayResults(result);
+                switchTab('results');  // Automatically switch to results tab
+                logMessage('Success', 'Image classification completed successfully', 'success', 'processing');
+            } else {
+                logMessage('Error', result.error || 'Classification failed', 'error', 'processing');
+                alert('Classification failed: ' + (result.error || 'Unknown error'));
+            }
+        } catch (error) {
+            showLoading(false);
+            logMessage('Error', 'Network error: ' + error.message, 'error', 'system');
+            alert('Network error: ' + error.message);
+        }
+    }
+    
+    function showLoading(show) {
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const classifyBtn = document.getElementById('classifyBtn');
+        
+        if (show) {
+            loadingIndicator.style.display = 'flex';
+            classifyBtn.disabled = true;
+            classifyBtn.classList.add('pulse');
+        } else {
+            loadingIndicator.style.display = 'none';
+            classifyBtn.disabled = false;
+            classifyBtn.classList.remove('pulse');
+        }
+    }
+    
+    function displayResults(data) {
+        const predictionResults = document.getElementById('predictionResults');
+        const noResults = document.getElementById('noResults');
+        const topPredictions = document.getElementById('topPredictions');
+        
+        // Hide no results message
+        noResults.style.display = 'none';
+        
+        // Clear previous results
+        topPredictions.innerHTML = '';
+        
+        // Display top predictions
+        if (data.top_predictions && data.top_predictions.length > 0) {
+            data.top_predictions.forEach((pred, index) => {
+                const predDiv = document.createElement('div');
+                predDiv.className = `prediction-item ${index === 0 ? 'top' : ''}`;
+                predDiv.innerHTML = `
+                    <span>${pred.class_name}</span>
+                    <span style="color: #059669; font-weight: bold;">${(pred.confidence * 100).toFixed(1)}%</span>
+                `;
+                topPredictions.appendChild(predDiv);
+            });
+        }
+        
+        // Update stats
+        document.getElementById('topConfidence').textContent = data.top_predictions && data.top_predictions.length > 0 ? 
+            `${(data.top_predictions[0].confidence * 100).toFixed(1)}%` : 'N/A';
+        document.getElementById('modelUsed').textContent = data.model_name || 'Unknown';
+        document.getElementById('processingTime').textContent = data.latency ? 
+            `${(data.latency * 1000).toFixed(0)}ms` : 'N/A';
+        document.getElementById('imageSize').textContent = selectedImageFile ? 
+            `${(selectedImageFile.size / 1024 / 1024).toFixed(2)} MB` : 'N/A';
+        
+        // Show results
+        predictionResults.style.display = 'block';
+        
+        // Update processing information
+        updateProcessingInfo(data);
+    }
+    
+    function updateProcessingInfo(data) {
+        const imageProcessingInfo = document.getElementById('imageProcessingInfo');
+        const noProcessingInfo = document.getElementById('noProcessingInfo');
+        
+        // Hide no processing info message
+        noProcessingInfo.style.display = 'none';
+        
+        // Update upload details
+        if (selectedImageFile) {
+            document.getElementById('uploadDetails').innerHTML = `
+                <div class="detail-item">
+                    <span>Filename:</span>
+                    <span>${selectedImageFile.name}</span>
+                </div>
+                <div class="detail-item">
+                    <span>Size:</span>
+                    <span>${(selectedImageFile.size / 1024 / 1024).toFixed(2)} MB</span>
+                </div>
+                <div class="detail-item">
+                    <span>Type:</span>
+                    <span>${selectedImageFile.type}</span>
+                </div>
+            `;
+        }
+        
+        // Update preprocessing details with dynamic sizing information
+        const preprocessDetails = document.getElementById('preprocessDetails');
+        let targetResolution = '224x224 pixels'; // default
+        
+        // Try to get the actual resolution used from model metadata if available
+        if (data.model_name) {
+            try {
+                // This would be populated by the backend with actual model input shape
+                const modelShape = data.model_input_shape || [224, 224];
+                targetResolution = `${modelShape[0]}x${modelShape[1]} pixels (model-specific)`;
+            } catch (e) {
+                // Use default if model metadata not available
+                targetResolution = '224x224 pixels (default)';
+            }
+        }
+        
+        preprocessDetails.innerHTML = `
+            <div class="detail-item">
+                <span>Target Resolution:</span>
+                <span>${targetResolution}</span>
+            </div>
+            <div class="detail-item">
+                <span>Normalization:</span>
+                <span>ImageNet mean/std</span>
+            </div>
+            <div class="detail-item">
+                <span>Color Space:</span>
+                <span>RGB</span>
+            </div>
+            <div class="detail-item">
+                <span>Data Type:</span>
+                <span>Float32</span>
+            </div>
+            <div class="detail-item">
+                <span>Format:</span>
+                <span>NCHW (Batch, Channels, Height, Width)</span>
+            </div>
+        `;
+        
+        // Update inference details
+        document.getElementById('inferenceDetails').innerHTML = `
+            <div class="detail-item">
+                <span>Model:</span>
+                <span>${data.model_name || 'Unknown'}</span>
+            </div>
+            <div class="detail-item">
+                <span>Framework:</span>
+                <span>ONNX Runtime</span>
+            </div>
+            <div class="detail-item">
+                <span>Inference Time:</span>
+                <span>${data.latency ? (data.latency * 1000).toFixed(0) + 'ms' : 'N/A'}</span>
+            </div>
+            <div class="detail-item">
+                <span>Backend:</span>
+                <span>CPU</span>
+            </div>
+        `;
+        
+        // Update post-processing details
+        const topClass = data.top_predictions && data.top_predictions.length > 0 ? 
+            data.top_predictions[0].class_name : 'Unknown';
+        const confidence = data.top_predictions && data.top_predictions.length > 0 ? 
+            `${(data.top_predictions[0].confidence * 100).toFixed(1)}%` : 'N/A';
+            
+        document.getElementById('postprocessDetails').innerHTML = `
+            <div class="detail-item">
+                <span>Top Prediction:</span>
+                <span>${topClass}</span>
+            </div>
+            <div class="detail-item">
+                <span>Confidence:</span>
+                <span>${confidence}</span>
+            </div>
+            <div class="detail-item">
+                <span>Classes Detected:</span>
+                <span>${data.top_predictions ? data.top_predictions.length : 0}</span>
+            </div>
+            <div class="detail-item">
+                <span>Output Format:</span>
+                <span>Probability Distribution</span>
+            </div>
+        `;
+        
+        // Update timing breakdown if available
+        if (data.processing_times) {
+            const timingBreakdown = document.getElementById('timingBreakdown');
+            timingBreakdown.style.display = 'block';
+            
+            document.getElementById('timingModelCheck').textContent = 
+                data.processing_times.model_check ? `${(data.processing_times.model_check * 1000).toFixed(0)}ms` : 'N/A';
+            document.getElementById('timingPreprocess').textContent = 
+                data.processing_times.preprocessing ? `${(data.processing_times.preprocessing * 1000).toFixed(0)}ms` : 'N/A';
+            document.getElementById('timingInference').textContent = 
+                data.processing_times.inference ? `${(data.processing_times.inference * 1000).toFixed(0)}ms` : 'N/A';
+            document.getElementById('timingPostprocess').textContent = 
+                data.processing_times.postprocessing ? `${(data.processing_times.postprocessing * 1000).toFixed(0)}ms` : 'N/A';
+        }
+        
+        // Show processing info
+        imageProcessingInfo.style.display = 'block';
+    }
+    
+    async function loadModelMetadata() {
+        const modelSelect = document.getElementById('modelSelect');
+        const selectedModel = modelSelect.value;
+        
+        const modelMetadataInfo = document.getElementById('modelMetadataInfo');
+        const noMetadataInfo = document.getElementById('noMetadataInfo');
+        
+        if (!selectedModel) {
+            modelMetadataInfo.style.display = 'none';
+            noMetadataInfo.style.display = 'block';
+            return;
+        }
+        
+        // Hide no metadata message
+        noMetadataInfo.style.display = 'none';
+        
+        try {
+            // Fetch detailed model metadata
+            const metadataResponse = await fetch(`/models/${selectedModel}/metadata`);
+            const metadataData = await metadataResponse.json();
+            
+            // Fetch API endpoints information
+            const endpointsResponse = await fetch(`/models/${selectedModel}/endpoints`);
+            const endpointsData = await endpointsResponse.json();
+            
+            if (metadataData.success && metadataData.metadata) {
+                const metadata = metadataData.metadata;
+                
+                // Update basic metadata information
+                document.getElementById('metaModelName').textContent = metadata.name || selectedModel;
+                document.getElementById('metaFramework').textContent = metadata.platform || 'Unknown';
+                
+                // Set input shape
+                if (metadata.inputs && metadata.inputs.length > 0) {
+                    const inputShape = metadata.inputs[0].shape;
+                    document.getElementById('metaInputShape').textContent = JSON.stringify(inputShape);
+                } else {
+                    document.getElementById('metaInputShape').textContent = 'Unknown';
+                }
+                
+                // Determine model type
+                let modelType = 'Image Classification';
+                if (selectedModel.includes('efficientnet') || selectedModel.includes('efb') || selectedModel.includes('efv2')) {
+                    modelType = 'EfficientNet - Image Classification';
+                } else if (selectedModel.includes('resnet')) {
+                    modelType = 'ResNet - Image Classification';
+                } else if (selectedModel.includes('convnext')) {
+                    modelType = 'ConvNeXt - Image Classification';
+                }
+                document.getElementById('metaModelType').textContent = modelType;
+                
+                // Set number of classes based on output shape
+                if (metadata.outputs && metadata.outputs.length > 0) {
+                    const outputShape = metadata.outputs[0].shape;
+                    const numClasses = outputShape[outputShape.length - 1];
+                    document.getElementById('metaNumClasses').textContent = `${numClasses} classes`;
+                } else {
+                    document.getElementById('metaNumClasses').textContent = '196 (Stanford Cars)';
+                }
+                
+                // Check model status
+                document.getElementById('metaStatus').innerHTML = '<span style="color: #28a745;">✓ Ready</span>';
+                
+                // Update model description with API endpoints
+                const modelDescription = document.getElementById('modelDescription');
+                const descriptionContent = document.getElementById('descriptionContent');
+                
+                if (endpointsData.success && endpointsData.endpoints) {
+                    const endpoints = endpointsData.endpoints;
+                    
+                    let description = `
+                        <div class="endpoints-section">
+                            <h5><i class="fas fa-code"></i> API Endpoints for Developers</h5>
+                            
+                            <div class="endpoint-item">
+                                <h6>📊 Model Metadata</h6>
+                                <p><strong>Description:</strong> ${endpoints.model_metadata.description}</p>
+                                <div class="code-block">
+                                    <code>${endpoints.model_metadata.curl_command}</code>
+                                </div>
+                            </div>
+                            
+                            <div class="endpoint-item">
+                                <h6>🚀 Inference (v1 API)</h6>
+                                <p><strong>Description:</strong> ${endpoints.inference_v1.description}</p>
+                                <div class="code-block">
+                                    <code>${endpoints.inference_v1.curl_command}</code>
+                                </div>
+                            </div>
+                            
+                            <div class="endpoint-item">
+                                <h6>🔄 Model Ready Check</h6>
+                                <p><strong>Description:</strong> ${endpoints.model_ready.description}</p>
+                                <div class="code-block">
+                                    <code>${endpoints.model_ready.curl_command}</code>
+                                </div>
+                            </div>
+                            
+                            <div class="endpoint-item">
+                                <h6>📋 All Models Config</h6>
+                                <p><strong>Description:</strong> ${endpoints.all_models.description}</p>
+                                <div class="code-block">
+                                    <code>${endpoints.all_models.curl_command}</code>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    // Add model-specific description
+                    if (selectedModel.includes('efb0')) {
+                        description += `
+                            <div class="model-info">
+                                <h5><i class="fas fa-info-circle"></i> About EfficientNet-B0</h5>
+                                <p><strong>EfficientNet-B0</strong> is a convolutional neural network architecture that achieves better accuracy and efficiency than previous ConvNets.</p>
+                                <ul>
+                                    <li>Developed by Google Brain team</li>
+                                    <li>Uses compound scaling method</li>
+                                    <li>Optimized for mobile and edge devices</li>
+                                    <li>Trained on Stanford Cars dataset with 196 car classes</li>
+                                </ul>
+                            </div>
+                        `;
+                    } else if (selectedModel.includes('efb3')) {
+                        description += `
+                            <div class="model-info">
+                                <h5><i class="fas fa-info-circle"></i> About EfficientNet-B3</h5>
+                                <p><strong>EfficientNet-B3</strong> is a scaled-up version of EfficientNet-B0 with improved accuracy.</p>
+                                <ul>
+                                    <li>Higher capacity than B0 with better performance</li>
+                                    <li>Balanced efficiency and accuracy</li>
+                                    <li>Good for production environments</li>
+                                    <li>Trained on Stanford Cars dataset with 196 car classes</li>
+                                </ul>
+                            </div>
+                        `;
+                    }
+                    
+                    descriptionContent.innerHTML = description;
+                    modelDescription.style.display = 'block';
+                }
+                
+            } else {
+                // Fallback to static information if API fails
+                loadStaticModelMetadata(selectedModel);
+            }
+            
+        } catch (error) {
+            console.error('Error loading model metadata:', error);
+            // Fallback to static information
+            loadStaticModelMetadata(selectedModel);
+        }
+        
+        // Show metadata info
+        modelMetadataInfo.style.display = 'block';
+    }
+    
+    function loadStaticModelMetadata(selectedModel) {
+        // Fallback static metadata loading (original implementation)
+        document.getElementById('metaModelName').textContent = selectedModel;
+        
+        // Determine framework based on model name
+        let framework = 'ONNX';
+        if (selectedModel.includes('openvino')) {
+            framework = 'OpenVINO';
+        } else if (selectedModel.includes('onnx')) {
+            framework = 'ONNX';
+        }
+        document.getElementById('metaFramework').textContent = framework;
+        
+        // Set input shape (standard for most vision models)
+        document.getElementById('metaInputShape').textContent = '[1, 3, 224, 224]';
+        
+        // Determine model type
+        let modelType = 'Image Classification';
+        if (selectedModel.includes('efficientnet') || selectedModel.includes('efb') || selectedModel.includes('efv2')) {
+            modelType = 'EfficientNet - Image Classification';
+        } else if (selectedModel.includes('resnet')) {
+            modelType = 'ResNet - Image Classification';
+        } else if (selectedModel.includes('convnext')) {
+            modelType = 'ConvNeXt - Image Classification';
+        }
+        document.getElementById('metaModelType').textContent = modelType;
+        
+        // Set number of classes (Stanford Cars dataset)
+        document.getElementById('metaNumClasses').textContent = '196 (Stanford Cars)';
+        
+        // Set status as unknown for static fallback
+        document.getElementById('metaStatus').innerHTML = '<span style="color: #ffc107;">? Unknown</span>';
+    }
+    
+    // Add event listener for model selection change
+    document.addEventListener('DOMContentLoaded', function() {
+        const modelSelect = document.getElementById('modelSelect');
+        if (modelSelect) {
+            modelSelect.addEventListener('change', function() {
+                // If metadata tab is active, reload metadata
+                const metadataTab = document.getElementById('metadataTab');
+                if (metadataTab && metadataTab.classList.contains('active')) {
+                    loadModelMetadata();
+                }
+            });
+        }
+    });
+    
+    // Tab switching functionality
+    function switchTab(tabName) {
+        // Update tab buttons
+        const tabs = document.querySelectorAll('.tab-button');
+        tabs.forEach(tab => tab.classList.remove('active'));
+        
+        // Update tab contents
+        const tabContents = document.querySelectorAll('.tab-content');
+        tabContents.forEach(content => content.classList.remove('active'));
+        
+        // Activate selected tab
+        if (tabName === 'results') {
+            document.getElementById('resultsTab').classList.add('active');
+            document.getElementById('resultsContent').classList.add('active');
+        } else if (tabName === 'processing') {
+            document.getElementById('processingTab').classList.add('active');
+            document.getElementById('processingContent').classList.add('active');
+        } else if (tabName === 'metadata') {
+            document.getElementById('metadataTab').classList.add('active');
+            document.getElementById('metadataContent').classList.add('active');
+            loadModelMetadata(); // Load metadata when tab is opened
+        } else if (tabName === 'logs') {
+            document.getElementById('logsTab').classList.add('active');
+            document.getElementById('logsContent').classList.add('active');
+        }
+    }
+    
+    // Unified logging functionality
+    function logMessage(step, details, status = 'info', type = 'system') {
+        const timestamp = new Date().toLocaleTimeString('en-US', { 
+            hour12: false, 
+            hour: '2-digit', 
+            minute: '2-digit', 
+            second: '2-digit',
+            fractionalSecondDigits: 3 
+        });
+        
+        const logEntry = {
+            timestamp: timestamp,
+            step: step,
+            details: details,
+            status: status,
+            type: type  // 'system', 'processing', 'endpoint'
+        };
+        
+        addUnifiedLogEntry(logEntry);
+    }
+    
+    function addUnifiedLogEntry(entry) {
+        const logContainer = document.getElementById('unifiedLogs');
+        const logDiv = document.createElement('div');
+        
+        // Determine icon based on type
+        let icon = 'fas fa-info-circle';
+        if (entry.type === 'processing') {
+            icon = 'fas fa-cogs';
+        } else if (entry.type === 'endpoint') {
+            icon = 'fas fa-exchange-alt';
+        } else if (entry.type === 'system') {
+            icon = 'fas fa-desktop';
+        }
+        
+        logDiv.className = `log-entry ${entry.status}`;
+        logDiv.setAttribute('data-type', entry.type);
+        logDiv.innerHTML = `
+            <span class="log-timestamp">[${entry.timestamp}]</span>
+            <span class="log-content">
+                <i class="${icon}" style="margin-right: 5px; opacity: 0.7;"></i>
+                <strong>${entry.step}:</strong> ${entry.details}
+            </span>
+        `;
+        
+        logContainer.appendChild(logDiv);
+        
+        // Keep only last 100 entries
+        while (logContainer.children.length > 100) {
+            logContainer.removeChild(logContainer.firstChild);
+        }
+        
+        // Auto-scroll to bottom if enabled
+        if (autoScroll) {
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+    }
+    
+    function addEndpointLogEntry(entry) {
+        const responseTime = entry.response_time ? `${(entry.response_time * 1000).toFixed(0)}ms` : 'N/A';
+        const statusColor = entry.status >= 200 && entry.status < 300 ? 'success' : 'error';
+        
+        logMessage(
+            `${entry.method} ${entry.endpoint}`,
+            `Status: ${entry.status || 'N/A'} | Response Time: ${responseTime}`,
+            statusColor,
+            'endpoint'
+        );
+    }
+    
+    function addProcessingLogEntry(entry) {
+        logMessage(entry.step, entry.details, entry.status, 'processing');
+    }
+    
+    async function fetchLogs() {
+        try {
+            // Fetch both processing and endpoint logs
+            const [processingResponse, endpointResponse] = await Promise.all([
+                fetch('/logs/processing'),
+                fetch('/logs/endpoints')
+            ]);
+            
+            const processingData = await processingResponse.json();
+            const endpointData = await endpointResponse.json();
+            
+            // Update processing logs
+            if (processingData.logs && processingData.logs.length > 0) {
+                const currentProcessingLogs = document.querySelectorAll('[data-type="processing"]').length;
+                
+                // Only add new entries
+                if (processingData.logs.length > currentProcessingLogs) {
+                    processingData.logs.slice(currentProcessingLogs).forEach(entry => {
+                        addProcessingLogEntry(entry);
+                    });
+                }
+            }
+            
+            // Update endpoint logs  
+            if (endpointData.logs && endpointData.logs.length > 0) {
+                const currentEndpointLogs = document.querySelectorAll('[data-type="endpoint"]').length;
+                
+                // Only add new endpoint entries
+                if (endpointData.logs.length > currentEndpointLogs) {
+                    endpointData.logs.slice(currentEndpointLogs).forEach(entry => {
+                        addEndpointLogEntry(entry);
+                    });
+                }
+            }
+        } catch (err) {
+            console.error('Failed to fetch logs:', err);
+        }
+    }
+    
+    function startLogPolling() {
+        // Initial fetch
+        fetchLogs();
+        
+        // Poll every 2 seconds
+        logPollingInterval = setInterval(fetchLogs, 2000);
+    }
+    
+    function toggleAutoScroll() {
+        autoScroll = !autoScroll;
+        const btn = document.getElementById('autoScrollBtn');
+        btn.innerHTML = `<i class="fas fa-arrows-alt-v"></i> Auto-scroll: ${autoScroll ? 'ON' : 'OFF'}`;
+    }
+    
+    function filterLogs() {
+        const filter = document.getElementById('logFilter').value;
+        const logEntries = document.querySelectorAll('#unifiedLogs .log-entry');
+        
+        logEntries.forEach(entry => {
+            const entryType = entry.getAttribute('data-type');
+            
+            if (filter === 'all') {
+                entry.style.display = 'block';
+            } else if (filter === entryType) {
+                entry.style.display = 'block';
+            } else {
+                entry.style.display = 'none';
+            }
+        });
+        
+        currentLogType = filter;
+    }
+    
+    async function clearLogs() {
+        try {
+            await fetch('/logs/clear', { method: 'POST' });
+            
+            // Clear UI container
+            document.getElementById('unifiedLogs').innerHTML = `
+                <div class="log-entry info" data-type="system">
+                    <span class="log-timestamp">[System]</span>
+                    <span class="log-content">
+                        <i class="fas fa-desktop" style="margin-right: 5px; opacity: 0.7;"></i>
+                        <strong>System:</strong> Logs cleared - new activity will appear here...
+                    </span>
+                </div>
+            `;
+            
+            logMessage('System', 'All logs cleared successfully', 'info', 'system');
+        } catch (err) {
+            logMessage('Error', 'Failed to clear logs: ' + err.message, 'error', 'system');
+        }
+    }
+    
+    // Initialize filter on page load
+    window.addEventListener('load', function() {
+        filterLogs(); // Set initial log view
+    });
+    </script>
+</body>
+</html>

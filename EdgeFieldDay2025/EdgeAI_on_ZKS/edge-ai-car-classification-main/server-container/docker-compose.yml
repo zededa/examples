@@ -1,0 +1,30 @@
+services:
+  car-classifier-server:
+    build: .
+    ports:
+      - "8000:8000"  # REST API
+      - "9000:9000"  # gRPC
+    volumes:
+      # Mount external models (comment out to use embedded models)
+      - ../volume-for-model/models:/models
+    environment:
+      - LOG_LEVEL=DEBUG
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/v1/models/efb3_car_onnx/ready"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Example: Server with embedded models only (no volume mount)
+  car-classifier-server-embedded:
+    build: .
+    ports:
+      - "8001:8000"  # REST API on different port
+      - "9001:9000"  # gRPC on different port
+    environment:
+      - LOG_LEVEL=DEBUG
+    restart: unless-stopped
+    profiles:
+      - embedded  # Only start with: docker-compose --profile embedded up

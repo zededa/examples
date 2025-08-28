@@ -1,0 +1,165 @@
+{{- if .Values.server.enabled -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "edge-ai-car-classification.fullname" . }}-server
+  labels:
+  {{- include "edge-ai-car-classification.server.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.server.replicaCount }}
+  selector:
+    matchLabels:
+  {{- include "edge-ai-car-classification.server.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap-sidecar.yaml") . | sha256sum }}
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+  {{- include "edge-ai-car-classification.server.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "edge-ai-car-classification.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      initContainers:
+        # Init container to ensure external MinIO is ready and create initial config
+        - name: init-minio-wait
+          image: busybox:1.35
+          command:
+            - sh
+            - -c
+            - |
+              echo "Waiting for external MinIO to be ready..."
+              MINIO_HOST=$(echo "{{ .Values.minio.external.endpoint }}" | cut -d':' -f1)
+              MINIO_PORT=$(echo "{{ .Values.minio.external.endpoint }}" | cut -d':' -f2)
+              until nc -z $MINIO_HOST $MINIO_PORT; do
+                echo "Waiting for MinIO at {{ .Values.minio.external.endpoint }}..."
+                sleep 5
+              done
+              echo "External MinIO is ready!"
+              
+              # Create initial OVMS config.json
+              mkdir -p {{ .Values.server.sidecar.config.modelsPath }}
+              cat > {{ .Values.server.sidecar.config.modelsPath }}/config.json << EOF
+              {
+                "model_config_list": []
+              }
+              EOF
+              echo "Initial config.json created"
+          volumeMounts:
+            - name: models-storage
+              mountPath: {{ .Values.server.sidecar.config.modelsPath }}
+      containers:
+        # OpenVINO Model Server container
+        - name: ovms
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: {{ include "edge-ai-car-classification.image" (dict "registry" .Values.global.imageRegistry "image" .Values.server.ovms.image) }}
+          imagePullPolicy: {{ .Values.server.ovms.pullPolicy }}
+          ports:
+            - name: grpc
+              containerPort: {{ .Values.server.ovms.config.port }}
+              protocol: TCP
+            - name: rest
+              containerPort: {{ .Values.server.ovms.config.restPort }}
+              protocol: TCP
+          args:
+            - "--config_path"
+            - "{{ .Values.server.sidecar.config.modelsPath }}/config.json"
+            - "--port"
+            - "{{ .Values.server.ovms.config.port }}"
+            - "--rest_port"
+            - "{{ .Values.server.ovms.config.restPort }}"
+            - "--log_level"
+            - "{{ .Values.server.ovms.config.logLevel }}"
+            - "--file_system_poll_wait_seconds"
+            - "{{ .Values.server.ovms.config.fileSystemPollWaitSeconds }}"
+          livenessProbe:
+            httpGet:
+              path: /v1/config
+              port: rest
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /v1/config
+              port: rest
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+          resources:
+            {{- toYaml .Values.server.resources.ovms | nindent 12 }}
+          volumeMounts:
+            - name: models-storage
+              mountPath: {{ .Values.server.sidecar.config.modelsPath }}
+        
+        # Model sync sidecar container
+        - name: model-sync
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: {{ include "edge-ai-car-classification.image" (dict "registry" .Values.global.imageRegistry "image" .Values.server.sidecar.image) }}
+          imagePullPolicy: {{ .Values.server.sidecar.pullPolicy }}
+          env:
+            - name: CONFIG_PATH
+              value: "/config/sync-config.yaml"
+          livenessProbe:
+            exec:
+              command:
+                - python
+                - -c
+                - "import sys; sys.exit(0)"
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - "test -f {{ .Values.server.sidecar.config.modelsPath }}/config.json"
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          resources:
+            {{- toYaml .Values.server.resources.sidecar | nindent 12 }}
+          volumeMounts:
+            - name: models-storage
+              mountPath: {{ .Values.server.sidecar.config.modelsPath }}
+            - name: sidecar-config
+              mountPath: /config
+              readOnly: true
+      volumes:
+        - name: models-storage
+          {{- if .Values.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ default (printf "%s-models" (include "edge-ai-car-classification.fullname" .)) .Values.persistence.existingClaim }}
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+        - name: sidecar-config
+          configMap:
+            name: {{ include "edge-ai-car-classification.fullname" . }}-sidecar-config
+      {{- with .Values.server.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.server.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.server.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}
