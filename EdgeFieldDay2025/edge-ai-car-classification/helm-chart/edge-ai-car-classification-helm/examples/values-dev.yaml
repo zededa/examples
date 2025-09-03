@@ -1,0 +1,64 @@
+# Example values for development environment
+# Copy this file and modify for your specific setup
+
+# Replace with your actual registry
+global:
+  imageRegistry: "your-registry.com"
+
+server:
+  ovms:
+    image: "your-registry.com/my-ovms-server:latest"
+  sidecar:
+    image: "your-registry.com/model-sync-sidecar:latest"
+    config:
+      # Check for new models every 30 seconds in development
+      syncInterval: 30
+      logLevel: "DEBUG"
+
+client:
+  enabled: true
+  image: "your-registry.com/my-client-app:latest"
+  config:
+    # More frequent inference for testing
+    interval: 10
+
+minio:
+  # Change these credentials!
+  rootUser: "devadmin"
+  rootPassword: "devpassword123"
+  
+  # Smaller storage for development
+  persistence:
+    size: 5Gi
+
+# Smaller resource requirements for development
+server:
+  resources:
+    ovms:
+      requests:
+        memory: "512Mi"
+        cpu: "250m"
+      limits:
+        memory: "1Gi"
+        cpu: "500m"
+    sidecar:
+      requests:
+        memory: "128Mi"
+        cpu: "50m"
+      limits:
+        memory: "256Mi"
+        cpu: "100m"
+
+client:
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "50m"
+    limits:
+      memory: "256Mi"
+      cpu: "100m"
+
+# Use default storage class
+persistence:
+  storageClass: ""
+  size: 5Gi

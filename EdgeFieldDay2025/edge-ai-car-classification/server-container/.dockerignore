@@ -1,0 +1,15 @@
+# Ignore build artifacts and logs
+*.log
+.DS_Store
+.git/
+.gitignore
+
+# Ignore docker build cache
+.dockerignore
+
+# Ignore test scripts and documentation that don't need to be in the container
+test-volume-mounting.sh
+README.md
+
+# Ignore docker-compose as it's not needed in the container
+docker-compose.yml

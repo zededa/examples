@@ -1,0 +1,66 @@
+1. Get the application URL by running these commands:
+{{- if contains "NodePort" .Values.service.ovms.type }}
+   export NODE_PORT=$(kubectl get --namespace {{ .Release.Namespace }} -o jsonpath="{.spec.ports[1].nodePort}" services {{ include "edge-ai-car-classification.ovms.serviceName" . }})
+  export NODE_IP=$(kubectl get nodes --namespace {{ .Release.Namespace }} -o jsonpath="{.items[0].status.addresses[0].address}")
+  echo http://$NODE_IP:$NODE_PORT
+{{- else if contains "LoadBalancer" .Values.service.ovms.type }}
+     NOTE: It may take a few minutes for the LoadBalancer IP to be available.
+           You can watch the status of by running 'kubectl get --namespace {{ .Release.Namespace }} svc -w {{ include "edge-ai-car-classification.ovms.serviceName" . }}'
+   export SERVICE_IP=$(kubectl get svc --namespace {{ .Release.Namespace }} {{ include "edge-ai-car-classification.ovms.serviceName" . }} --template "{{"{{ range (index .status.loadBalancer.ingress 0) }}{{.}}{{ end }}"}}")
+  echo http://$SERVICE_IP:{{ .Values.service.ovms.ports.rest }}
+{{- else if contains "ClusterIP" .Values.service.ovms.type }}
+   export POD_NAME=$(kubectl get pods --namespace {{ .Release.Namespace }} -l "app.kubernetes.io/name={{ include "edge-ai-car-classification.name" . }},app.kubernetes.io/instance={{ .Release.Name }},app.kubernetes.io/component=server" -o jsonpath="{.items[0].metadata.name}")
+  export CONTAINER_PORT=$(kubectl get pod --namespace {{ .Release.Namespace }} $POD_NAME -o jsonpath="{.spec.containers[0].ports[1].containerPort}")
+  echo "Visit http://127.0.0.1:8080 to use your application"
+  kubectl --namespace {{ .Release.Namespace }} port-forward $POD_NAME 8080:$CONTAINER_PORT
+{{- end }}
+
+2. Access MinIO Console:
+{{- if .Values.minio.enabled }}
+  export MINIO_POD_NAME=$(kubectl get pods --namespace {{ .Release.Namespace }} -l "app=minio" -o jsonpath="{.items[0].metadata.name}")
+  echo "Visit http://127.0.0.1:9001 to access MinIO Console"
+  kubectl --namespace {{ .Release.Namespace }} port-forward $MINIO_POD_NAME 9001:9001
+  
+  MinIO Credentials:
+  - Username: {{ .Values.minio.rootUser }}
+  - Password: {{ .Values.minio.rootPassword }}
+{{- end }}
+
+3. Upload your model to MinIO:
+   - Access the MinIO console using the credentials above
+   - Navigate to the "{{ .Values.server.sidecar.config.bucketName }}" bucket
+   - Upload your model files in the expected directory structure
+   - The sync sidecar will automatically detect and load new models
+
+4. Monitor the deployment:
+   # Check server pods (OVMS + Sync Sidecar)
+   kubectl get pods -l "app.kubernetes.io/name={{ include "edge-ai-car-classification.name" . }},app.kubernetes.io/instance={{ .Release.Name }},app.kubernetes.io/component=server" -n {{ .Release.Namespace }}
+   
+   # Check server logs
+   kubectl logs -l "app.kubernetes.io/name={{ include "edge-ai-car-classification.name" . }},app.kubernetes.io/instance={{ .Release.Name }},app.kubernetes.io/component=server" -c ovms -n {{ .Release.Namespace }}
+   kubectl logs -l "app.kubernetes.io/name={{ include "edge-ai-car-classification.name" . }},app.kubernetes.io/instance={{ .Release.Name }},app.kubernetes.io/component=server" -c model-sync -n {{ .Release.Namespace }}
+   
+{{- if .Values.client.enabled }}
+   # Check client pods
+   kubectl get pods -l "app.kubernetes.io/name={{ include "edge-ai-car-classification.name" . }},app.kubernetes.io/instance={{ .Release.Name }},app.kubernetes.io/component=client" -n {{ .Release.Namespace }}
+   
+   # Check client logs
+   kubectl logs -l "app.kubernetes.io/name={{ include "edge-ai-car-classification.name" . }},app.kubernetes.io/instance={{ .Release.Name }},app.kubernetes.io/component=client" -n {{ .Release.Namespace }}
+{{- end }}
+
+5. Test the inference endpoint:
+   # Get OVMS service URL
+   export OVMS_URL=$(kubectl get svc {{ include "edge-ai-car-classification.ovms.serviceName" . }} -n {{ .Release.Namespace }} -o jsonpath='{.spec.clusterIP}'):{{ .Values.service.ovms.ports.rest }}
+   
+   # Test health endpoint
+   kubectl run curl-test --image=curlimages/curl --rm -it --restart=Never -- curl http://$OVMS_URL/v1/config
+
+6. Upgrade the deployment:
+   helm upgrade {{ .Release.Name }} {{ .Chart.Name }} -n {{ .Release.Namespace }}
+
+7. Uninstall the deployment:
+   helm uninstall {{ .Release.Name }} -n {{ .Release.Namespace }}
+
+Thank you for installing {{ .Chart.Name }}!
+
+For more information, visit: {{ .Chart.Home }}
