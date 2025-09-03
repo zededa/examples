@@ -1,0 +1,209 @@
+# Default values for edge-ai-car-classification.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# Global settings
+global:
+  imageRegistry: "adithyazededa"  # DockerHub registry
+  imagePullSecrets: []
+
+# Server configuration (OpenVINO Model Server + Sync Sidecar)
+server:
+  # Enable server deployment
+  enabled: true
+  
+  # OpenVINO Model Server container
+  ovms:
+    image: "edgeai-ovms-server:v5.4"  # Registry prefix handled by global.imageRegistry
+    pullPolicy: IfNotPresent
+    # OVMS specific configuration
+    config:
+      modelName: "efb3_car_onnx"
+      modelPath: "/models"
+      port: 9000
+      restPort: 8000
+      logLevel: "DEBUG"
+      # File system polling interval for config changes (seconds)
+      fileSystemPollWaitSeconds: 5
+  
+  # Sync sidecar container for watching MinIO and updating models
+  sidecar:
+    image: "edgeai-model-sync-sidecar:v5.4"  # Registry prefix handled by global.imageRegistry
+    pullPolicy: IfNotPresent
+    # Sidecar specific configuration
+    config:
+      # How often to check MinIO for new models (seconds)
+      syncInterval: 30
+      # Path where models are downloaded locally
+      modelsPath: "/models"
+      # Log level for sidecar
+      logLevel: "INFO"
+  
+  # Resource configuration
+  resources:
+    ovms:
+      requests:
+        memory: "4Gi"
+        cpu: "500m"
+      limits:
+        memory: "8Gi"
+        cpu: "1000m"
+    sidecar:
+      requests:
+        memory: "512Mi"
+        cpu: "100m"
+      limits:
+        memory: "1Gi"
+        cpu: "200m"
+  
+  # Replica count
+  replicaCount: 1
+  
+  # Node selector, tolerations, and affinity
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+# Client configuration
+client:
+  # Enable client deployment with web interface
+  enabled: true
+  
+  # Client container image
+  image: "edgeai-client-app:v5.4"  # Registry prefix handled by global.imageRegistry
+  pullPolicy: IfNotPresent  # Use local image if available, fallback to DockerHub
+  
+  # Client specific configuration
+  config:
+    # Maximum time to wait for models to become available (seconds)
+    maxStartupWait: 300
+    # Interval between health checks during startup (seconds)
+    healthCheckInterval: 10
+  
+  # Service configuration for web interface
+  service:
+    type: NodePort
+    port: 8080
+    targetPort: 8080
+    nodePort: 30081  # Access the web app on port 30081
+  
+  # Resource configuration
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "200m"
+  
+  # Replica count
+  replicaCount: 1
+  
+  # Node selector, tolerations, and affinity
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+# Service configuration
+service:
+  # OVMS service configuration
+  ovms:
+    type: ClusterIP
+    ports:
+      grpc: 9000
+      rest: 8000
+    annotations: {}
+
+# Persistent Volume Claim for shared model storage
+persistence:
+  enabled: true
+  # Storage class name (use default if empty)
+  storageClass: ""
+  # Access mode
+  accessMode: ReadWriteOnce
+  # Size of the volume
+  size: 10Gi
+  # Existing claim name (if you want to use an existing PVC)
+  existingClaim: ""
+  # Annotations
+  annotations: {}
+
+# External MinIO configuration (running outside Kubernetes)
+minio:
+  # MinIO is now external (not deployed as part of this chart)
+  enabled: false
+  
+  # External MinIO server configuration
+  external:
+    # MinIO server endpoint (IP:PORT or hostname:port)
+    endpoint: "172.16.8.136:9000"  # Use host IP since Kubernetes pods need to reach Docker host
+    # Access credentials
+    accessKey: "minioadmin"
+    secretKey: "minioadmin123"
+    # Whether to use TLS/SSL
+    secure: false
+    # Bucket name for models
+    bucketName: "ml-models"
+
+# Security context
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+
+# Service account
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+# Pod annotations
+podAnnotations: {}
+
+# Image pull secrets
+imagePullSecrets: []
+
+# Ingress configuration (optional)
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: ml-inference.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+  #  - secretName: ml-inference-tls
+  #    hosts:
+  #      - ml-inference.local
+
+# Monitoring and observability
+monitoring:
+  enabled: false
+  # ServiceMonitor for Prometheus
+  serviceMonitor:
+    enabled: false
+    labels: {}
+    interval: 30s
+    scrapeTimeout: 10s
+
+# Auto-scaling configuration
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
