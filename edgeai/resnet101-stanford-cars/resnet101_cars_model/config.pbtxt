@@ -1,0 +1,47 @@
+name: "resnet101_cars"
+platform: "onnxruntime_onnx"
+max_batch_size: 8
+version_policy: { all { } }
+
+input [
+  {
+    name: "input"
+    data_type: TYPE_FP32
+    dims: [3, 224, 224]
+  }
+]
+
+output [
+  {
+    name: "output"
+    data_type: TYPE_FP32
+    dims: [196]
+  }
+]
+
+instance_group [
+  {
+    kind: KIND_CPU
+    count: 1
+  },
+  {
+    kind: KIND_GPU
+    count: 1
+    gpus: [0]
+  }
+]
+
+dynamic_batching {
+  max_queue_delay_microseconds: 500
+  preferred_batch_size: [1, 2, 4, 8]
+}
+
+optimization {
+  execution_accelerators {
+    cpu_execution_accelerator : [
+      {
+        name : "openvino"
+      }
+    ]
+  }
+}

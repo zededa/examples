@@ -1,0 +1,19 @@
+# Core ML dependencies
+onnx>=1.12.0
+onnxruntime>=1.13.0
+numpy>=1.21.0
+pillow>=8.0.0
+
+# Add your model-specific dependencies here:
+# For PyTorch models:
+# torch>=1.8.0
+# torchvision>=0.9.0
+
+# For TensorFlow models:
+# tensorflow>=2.6.0
+
+# For Scikit-learn models:
+# scikit-learn>=1.0.0
+
+# For Hugging Face models:
+# transformers>=4.0.0
