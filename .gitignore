@@ -11,6 +11,10 @@ model.onnx
 
 #dataset
 edgeai/stanford-cars/
+
+# MLflow artifacts with large binary files
+**/*.data
+**/mlruns/**/artifacts/**/*.data
 # Python cache
 __pycache__/
 *.py[cod]
