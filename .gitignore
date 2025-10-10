@@ -10,7 +10,7 @@ model.onnx
 *.pth
 
 #dataset
-/Users/adithyashankar/Developer/examples/edgeai/stanford-cars
+edgeai/stanford-cars/
 # Python cache
 __pycache__/
 *.py[cod]
