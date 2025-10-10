@@ -7,7 +7,7 @@
 - **Dataset**: Stanford Cars
 - **Classes**: 196
 - **Format**: ONNX
-- **Size**: 178.50 MB
+- **Size**: 94.00 MB
 
 ## Triton Inference Server Configuration
 
@@ -91,12 +91,13 @@ print(f"Predicted class: {predicted_class}")
 ### Hardware Requirements
 - **Minimum**: 4GB RAM, 2 CPU cores  
 - **Recommended**: 8GB RAM, 4 CPU cores, NVIDIA GPU
-- **Storage**: ~357 MB for model + dependencies
+- **Storage**: ~188 MB for model + dependencies
 
 ## Model Performance
-- **Accuracy**: ~92% on Stanford Cars validation set
-- **Inference Time**: ~35ms per image (GPU)
-- **Throughput**: ~28 images/second (batch size 8)
+- **Accuracy**: 89.39% on Stanford Cars validation set (measured)
+- **Inference Time**: 398.45ms per image (CPU/ONNX Runtime)
+- **Model Size**: 94.0 MB (FP32 baseline)
+- **Throughput**: ~2.5 images/second (single image inference)
 
 ## Class Labels
 This model predicts among 196 car classes from the Stanford Cars dataset.
