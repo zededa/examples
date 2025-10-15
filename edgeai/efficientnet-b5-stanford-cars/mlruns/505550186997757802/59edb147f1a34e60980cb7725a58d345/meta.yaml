@@ -1,0 +1,14 @@
+artifact_uri: file:///Users/adithyashankar/Developer/examples/edgeai/efficientnet-b5-stanford-cars/mlruns/505550186997757802/59edb147f1a34e60980cb7725a58d345/artifacts
+end_time: 1760155296654
+entry_point_name: ''
+experiment_id: '505550186997757802'
+lifecycle_stage: active
+run_id: 59edb147f1a34e60980cb7725a58d345
+run_name: efficientnetb5_cars-v1.0-upload
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1760154686995
+status: 3
+tags: []
+user_id: adithyashankar

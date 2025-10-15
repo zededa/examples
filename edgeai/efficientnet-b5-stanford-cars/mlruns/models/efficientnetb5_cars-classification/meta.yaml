@@ -1,0 +1,9 @@
+aliases: {}
+creation_timestamp: 1760155296590
+deployment_job_id: null
+deployment_job_state: null
+description: 'efficientnetb5 model for Stanford Cars classification. Enhanced and
+  preprocessed for optimal performance. 196 car classes. Framework: PyTorch, Format:
+  ONNX'
+last_updated_timestamp: 1760155296833
+name: efficientnetb5_cars-classification

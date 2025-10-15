@@ -1,0 +1,10 @@
+artifact_location: file:///Users/adithyashankar/Developer/examples/edgeai/efficientnet-b3-stanford-cars/mlruns/387138003911017072/models/m-5af6dec84a924fdda55144b9ef86abdd/artifacts
+creation_timestamp: 1760034952604
+experiment_id: '387138003911017072'
+last_updated_timestamp: 1760034955129
+model_id: m-5af6dec84a924fdda55144b9ef86abdd
+model_type: null
+name: model
+source_run_id: 0d9087b19e5e48d485353b62f601fde3
+status: 2
+status_message: null
