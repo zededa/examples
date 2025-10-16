@@ -1,0 +1,16 @@
+Model Family,Precision,✅ Accuracy,⏱️ Avg. Latency (ms),💾 Size (MB)
+ResNet50,FP32 (Baseline),89.39%,398.45 ms,94.0 MB
+,INT8 Dynamic,88.53%,698.59 ms,23.7 MB
+,INT8 Static,89.14%,121.66 ms,23.7 MB
+EfficientNetB3,FP32 (Baseline),89.42%,348.09 ms,44.1 MB
+,INT8 Dynamic,0.27%,2262.28 ms,11.6 MB
+,INT8 Static,0.40%,248.79 ms,11.8 MB
+EfficientNetB5,FP32 (Baseline),89.62%,600.66 ms,112.4 MB
+,INT8 Dynamic,0.62%,4410.32 ms,29.1 MB
+,INT8 Static,35.38%,390.38 ms,29.4 MB
+EfficientNetV2-M,FP32 (Baseline),89.18%,766.45 ms,204.2 MB
+,INT8 Dynamic,70.84%,3362.63 ms,52.4 MB
+,INT8 Static,61.76%,351.90 ms,52.8 MB
+ConvNeXt Base,FP32 (Baseline),93.78%,1706.25 ms,336.6 MB
+,INT8 Dynamic,93.73%,6294.02 ms,85.0 MB
+,INT8 Static,93.07%,2090.16 ms,85.0 MB

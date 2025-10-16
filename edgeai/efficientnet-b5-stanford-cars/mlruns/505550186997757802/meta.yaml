@@ -1,0 +1,6 @@
+artifact_location: file:///Users/adithyashankar/Developer/examples/edgeai/efficientnet-b5-stanford-cars/mlruns/505550186997757802
+creation_time: 1760154686752
+experiment_id: '505550186997757802'
+last_update_time: 1760154686752
+lifecycle_stage: active
+name: efficientnetb5_cars-classification

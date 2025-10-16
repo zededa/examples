@@ -1,0 +1,26 @@
+{{- if .Values.server.enabled -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "edge-ai-car-classification.fullname" . }}-sidecar-config
+  labels:
+  {{- include "edge-ai-car-classification.labels" . | nindent 4 }}
+    app.kubernetes.io/component: config
+data:
+  sync-config.yaml: |
+    minio:
+      endpoint: {{ include "edge-ai-car-classification.minio.endpoint" . }}
+      access_key: {{ .Values.minio.external.accessKey }}
+      secret_key: {{ .Values.minio.external.secretKey }}
+      bucket_name: {{ .Values.minio.external.bucketName }}
+      secure: {{ .Values.minio.external.secure }}
+    
+    sync:
+      interval: {{ .Values.server.sidecar.config.syncInterval }}
+      models_path: {{ .Values.server.sidecar.config.modelsPath }}
+      log_level: {{ .Values.server.sidecar.config.logLevel }}
+    
+    ovms:
+      model_name: {{ .Values.server.ovms.config.modelName }}
+      config_path: "{{ .Values.server.sidecar.config.modelsPath }}/config.json"
+{{- end }}

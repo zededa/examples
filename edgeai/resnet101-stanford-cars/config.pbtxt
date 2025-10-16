@@ -1,0 +1,32 @@
+name: "resnet101_cars"
+platform: "onnxruntime_onnx"
+max_batch_size: 1
+version_policy: { all { } }
+
+input [
+  {
+    name: "input"
+    data_type: TYPE_FP32
+    dims: [-1, 3, 224, 224]
+  }
+]
+
+output [
+  {
+    name: "output"
+    data_type: TYPE_FP32
+    dims: [-1, 196]
+  }
+]
+
+instance_group [
+  {
+    kind: KIND_CPU
+    count: 1
+  }
+]
+
+dynamic_batching {
+  max_queue_delay_microseconds: 100
+  preferred_batch_size: [1]
+}
