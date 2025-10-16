@@ -1,0 +1,90 @@
+{{- if .Values.client.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "edge-ai-car-classification.fullname" . }}-client
+  labels:
+  {{- include "edge-ai-car-classification.client.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.client.replicaCount }}
+  selector:
+    matchLabels:
+  {{- include "edge-ai-car-classification.client.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+  {{- include "edge-ai-car-classification.client.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "edge-ai-car-classification.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      initContainers:
+        # Init container to wait for OVMS service to be ready
+        - name: init-ovms-wait
+          image: busybox:1.35
+          command:
+            - sh
+            - -c
+            - |
+              echo "Waiting for OVMS service to be ready..."
+              until nc -z {{ include "edge-ai-car-classification.ovms.serviceName" . }} {{ .Values.service.ovms.ports.rest }}; do
+                echo "Waiting for OVMS service..."
+                sleep 5
+              done
+              echo "OVMS service is ready!"
+      containers:
+        - name: client
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: {{ include "edge-ai-car-classification.image" (dict "registry" .Values.global.imageRegistry "image" .Values.client.image) }}
+          imagePullPolicy: {{ .Values.client.pullPolicy }}
+          env:
+            - name: MODEL_SERVER_URL
+              value: {{ include "edge-ai-car-classification.ovms.restEndpoint" . }}
+            - name: MAX_STARTUP_WAIT
+              value: "{{ .Values.client.config.maxStartupWait }}"
+            - name: HEALTH_CHECK_INTERVAL
+              value: "{{ .Values.client.config.healthCheckInterval }}"
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          resources:
+            {{- toYaml .Values.client.resources | nindent 12 }}
+      {{- with .Values.client.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.client.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.client.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}

@@ -1,0 +1,23 @@
+# Core ONNX Runtime dependencies
+onnx>=1.12.0
+onnxruntime>=1.13.0
+onnxruntime-gpu>=1.13.0  # For GPU inference
+numpy>=1.21.0
+
+# Computer Vision dependencies (for classification models)
+pillow>=8.0.0
+opencv-python>=4.5.0
+
+# Model serving dependencies
+tritonclient[all]>=2.20.0  # Triton client libraries
+
+# Optional performance optimizations
+# onnxruntime-openvino>=1.13.0  # Intel OpenVINO acceleration
+# onnxruntime-tensorrt>=1.13.0  # NVIDIA TensorRT acceleration
+
+# Development and testing
+requests>=2.25.0
+matplotlib>=3.3.0  # For visualization
+
+# EfficientNet specific
+efficientnet-pytorch>=0.7.0

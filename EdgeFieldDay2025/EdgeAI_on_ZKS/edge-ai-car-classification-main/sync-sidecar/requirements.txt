@@ -1,0 +1,5 @@
+boto3==1.34.34
+botocore==1.34.34
+watchdog==4.0.0
+PyYAML==6.0.1
+requests==2.31.0

@@ -1,0 +1,6 @@
+artifact_location: file:///Users/adithyashankar/Developer/examples/edgeai/efficientnet-b3-stanford-cars/mlruns/387138003911017072
+creation_time: 1760034286926
+experiment_id: '387138003911017072'
+last_update_time: 1760034286926
+lifecycle_stage: active
+name: EfficientNet-B3-classification

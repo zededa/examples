@@ -1,0 +1,10 @@
+# EfficientNet-B3 Stanford Cars Model Requirements
+onnx>=1.12.0
+onnxruntime>=1.13.0
+onnxruntime-gpu>=1.13.0
+numpy>=1.21.0
+pillow>=8.0.0
+tritonclient[all]>=2.20.0
+
+# Optional optimizations
+# onnxruntime-tensorrt>=1.13.0

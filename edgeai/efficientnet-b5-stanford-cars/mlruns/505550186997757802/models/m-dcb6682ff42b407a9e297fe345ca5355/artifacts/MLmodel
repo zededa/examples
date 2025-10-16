@@ -1,0 +1,24 @@
+artifact_path: file:///Users/adithyashankar/Developer/examples/edgeai/efficientnet-b5-stanford-cars/mlruns/505550186997757802/models/m-dcb6682ff42b407a9e297fe345ca5355/artifacts
+flavors:
+  onnx:
+    code: null
+    data: model.onnx
+    onnx_session_options: null
+    onnx_version: 1.19.0
+    providers:
+    - CUDAExecutionProvider
+    - CPUExecutionProvider
+  python_function:
+    data: model.onnx
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.onnx
+    python_version: 3.9.6
+mlflow_version: 3.1.4
+model_id: m-dcb6682ff42b407a9e297fe345ca5355
+model_size_bytes: 117902425
+model_uuid: m-dcb6682ff42b407a9e297fe345ca5355
+prompts: null
+run_id: 59edb147f1a34e60980cb7725a58d345
+utc_time_created: '2025-10-11 03:51:27.181026'
