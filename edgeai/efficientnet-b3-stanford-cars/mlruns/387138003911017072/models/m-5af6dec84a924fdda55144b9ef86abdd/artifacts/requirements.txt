@@ -1,4 +1,4 @@
-mlflow==3.5.0rc0
+mlflow==3.5.0
 numpy==2.0.2
 onnx==1.19.0
 onnxruntime==1.19.2
