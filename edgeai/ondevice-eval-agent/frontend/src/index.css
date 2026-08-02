@@ -1,0 +1,484 @@
+/**
+ * Theme tokens ported from webapp/static/css/variables.css so the React
+ * frontend keeps the existing ZEDEDA EPI palette, typography, radii,
+ * and shadows. The only additions here beyond variables.css are the
+ * tailwind @layer directives and react-markdown / hljs styles.
+ */
+
+/* Self-hosted fonts — bundled into the build so the UI works on
+   air-gapped / offline edge devices. */
+@import '@fontsource/inter/300.css';
+@import '@fontsource/inter/400.css';
+@import '@fontsource/inter/500.css';
+@import '@fontsource/inter/600.css';
+@import '@fontsource/inter/700.css';
+@import '@fontsource/fira-code/400.css';
+@import '@fontsource/fira-code/500.css';
+@import '@fontsource/fira-code/600.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --zededa-cyan: #00b8c3;
+  --zededa-cyan-hover: #00a5af;
+  --zededa-cyan-light: rgba(0, 184, 195, 0.1);
+  --zededa-cyan-border: rgba(0, 184, 195, 0.3);
+
+  --primary-5: rgba(0, 184, 195, 0.05);
+  --primary-10: rgba(0, 184, 195, 0.1);
+  --primary-15: rgba(0, 184, 195, 0.15);
+  --primary-20: rgba(0, 184, 195, 0.2);
+  --primary-30: rgba(0, 184, 195, 0.3);
+  --primary-40: rgba(0, 184, 195, 0.4);
+
+  --zededa-light-bg-primary: #f9fafb;
+  --zededa-light-bg-secondary: #ffffff;
+  --zededa-light-bg-tertiary: #f3f4f6;
+  --zededa-light-bg-hover: #e5e7eb;
+
+  --zededa-light-text-primary: #111827;
+  --zededa-light-text-secondary: #374151;
+  --zededa-light-text-tertiary: #6b7280;
+  --zededa-light-text-muted: #9ca3af;
+
+  --zededa-bg-primary: #030712;
+  --zededa-bg-secondary: #111827;
+  --zededa-bg-tertiary: #1f2937;
+  --zededa-bg-hover: #374151;
+
+  --zededa-text-primary: #ffffff;
+  --zededa-text-secondary: #d1d5db;
+  --zededa-text-tertiary: #9ca3af;
+  --zededa-text-muted: #6b7280;
+
+  --zededa-border-dark: #374151;
+
+  --gray-50: var(--zededa-light-bg-primary);
+  --gray-100: var(--zededa-light-bg-tertiary);
+  --gray-200: var(--zededa-light-bg-hover);
+  --gray-300: #d1d5db;
+  --gray-400: var(--zededa-light-text-muted);
+  --gray-500: var(--zededa-light-text-tertiary);
+  --gray-600: #4b5563;
+  --gray-700: var(--zededa-light-text-secondary);
+  --gray-800: #1f2937;
+  --gray-900: var(--zededa-light-text-primary);
+
+  --color-success: #10b981;
+  --color-success-light: rgba(16, 185, 129, 0.1);
+  --color-error: #ef4444;
+  --color-error-light: rgba(239, 68, 68, 0.1);
+  --color-warning: #f59e0b;
+  --color-warning-light: rgba(245, 158, 11, 0.1);
+
+  --island-bg: var(--zededa-light-bg-secondary);
+  --island-border: 1px solid var(--gray-200);
+  --radius-bubble: 16px;
+
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  --gray-50: var(--zededa-bg-secondary);
+  --gray-100: var(--zededa-bg-tertiary);
+  --gray-200: var(--zededa-bg-hover);
+  --gray-300: #4b5563;
+  --gray-400: var(--zededa-text-tertiary);
+  --gray-500: var(--zededa-text-secondary);
+  --gray-600: #e5e7eb;
+  --gray-700: #f3f4f6;
+  --gray-800: #f9fafb;
+  --gray-900: var(--zededa-text-primary);
+
+  --primary-5: rgba(4, 255, 255, 0.05);
+  --primary-10: rgba(4, 255, 255, 0.1);
+  --primary-15: rgba(4, 255, 255, 0.15);
+  --primary-20: rgba(4, 255, 255, 0.2);
+  --primary-30: rgba(4, 255, 255, 0.3);
+  --primary-40: rgba(4, 255, 255, 0.4);
+
+  --island-bg: var(--zededa-bg-secondary);
+  --island-border: 1px solid var(--zededa-border-dark, #374151);
+
+  color-scheme: dark;
+}
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+    background: var(--gray-50);
+    color: var(--gray-900);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Cyan focus ring on every interactive element — ported from the
+     legacy layout.css so the UI keeps its light-blue highlight. */
+  :focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--primary-20);
+    border-radius: 8px;
+  }
+
+  /* Cyan hover ring on every interactive element. `box-shadow` stacks on
+     top of existing borders (inline or Tailwind), so we get the highlight
+     without having to touch every component's borderColor. */
+  button,
+  [role='button'],
+  a {
+    transition:
+      box-shadow 150ms ease,
+      background-color 150ms ease,
+      border-color 150ms ease,
+      color 150ms ease;
+  }
+  button:not(:disabled):hover,
+  [role='button']:hover {
+    box-shadow: 0 0 0 2px var(--primary-20);
+  }
+}
+
+@layer components {
+  /* User bubble — primary-tinted background, notched top-right corner (EPI) */
+  .bubble-user {
+    background: var(--primary-10);
+    color: var(--gray-900);
+    padding: 1rem 1.25rem;
+    border-radius: var(--radius-bubble) 4px var(--radius-bubble)
+      var(--radius-bubble);
+    border: 1px solid var(--primary-20);
+    box-shadow:
+      0 4px 6px -1px rgba(0, 184, 195, 0.1),
+      0 2px 4px -2px rgba(0, 184, 195, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+
+  /* Assistant bubble — muted background, notched top-left corner */
+  .bubble-assistant {
+    background: rgba(243, 244, 246, 0.4);
+    color: var(--gray-800);
+    padding: 1rem 1.25rem;
+    border-radius: 4px var(--radius-bubble) var(--radius-bubble)
+      var(--radius-bubble);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    box-shadow:
+      0 4px 6px -1px rgba(0, 0, 0, 0.05),
+      0 2px 4px -2px rgba(0, 0, 0, 0.05);
+    transition: border-color 150ms ease;
+  }
+
+  :root[data-theme='dark'] .bubble-assistant {
+    background: rgba(31, 41, 55, 0.4);
+    color: var(--zededa-text-primary);
+    border-color: var(--zededa-border-dark);
+  }
+
+  .bubble-assistant:hover {
+    border-color: var(--zededa-cyan-border);
+  }
+
+  .island {
+    background: var(--island-bg);
+    border: var(--island-border);
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  }
+
+  .form-input {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    font-size: 13px;
+    background: var(--island-bg);
+    color: var(--gray-900);
+    border: 1px solid var(--gray-200);
+    border-radius: 8px;
+    outline: none;
+    transition:
+      border-color 150ms ease,
+      box-shadow 150ms ease;
+  }
+  .form-input::placeholder {
+    color: var(--gray-400);
+  }
+  .form-input:hover {
+    border-color: var(--zededa-cyan-border);
+  }
+  .form-input:focus {
+    border-color: var(--zededa-cyan);
+    box-shadow: 0 0 0 3px var(--primary-10);
+  }
+
+  /* Additive cyan hover ring — pairs with whatever border a component
+     already has, so we don't need to refactor inline borderColors. */
+  .hover-ring {
+    transition:
+      box-shadow 150ms ease,
+      border-color 150ms ease,
+      background-color 150ms ease;
+  }
+  .hover-ring:hover,
+  .hover-ring:focus-visible {
+    box-shadow: 0 0 0 2px var(--primary-20);
+  }
+
+  /* Unified radius scale — keeps sizes consistent across components.
+     Use these instead of Tailwind's rounded-* when we want tokenised
+     values that match the design system. */
+  .r-chip { border-radius: 999px; }        /* pills / small buttons */
+  .r-input { border-radius: 10px; }        /* inputs, small cards */
+  .r-card { border-radius: 12px; }         /* cards, sidebar items */
+  .r-panel { border-radius: 16px; }        /* modal, composer */
+}
+
+/* ZThrobber — Zededa Z pulse + shimmering label */
+@keyframes zThrob {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.85;
+  }
+  50% {
+    transform: scale(1.12);
+    opacity: 1;
+  }
+}
+.z-throb {
+  animation: zThrob 1.2s ease-in-out infinite;
+  transform-origin: center;
+}
+
+@keyframes thinkingLabel {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+.thinking-label {
+  animation: thinkingLabel 1.6s ease-in-out infinite;
+}
+
+@keyframes thinkingDots {
+  0% {
+    content: '';
+  }
+  33% {
+    content: '.';
+  }
+  66% {
+    content: '..';
+  }
+  100% {
+    content: '...';
+  }
+}
+
+/* Prose overrides inside assistant bubble — matches chat.css */
+.prose-msg {
+  font-size: 15px;
+  line-height: 1.7;
+  word-wrap: break-word;
+}
+
+.prose-msg p {
+  margin: 0 0 1rem;
+}
+
+.prose-msg p:last-child {
+  margin-bottom: 0;
+}
+
+.prose-msg h1,
+.prose-msg h2,
+.prose-msg h3,
+.prose-msg h4 {
+  color: var(--gray-900);
+  font-weight: 600;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.prose-msg h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.prose-msg h2 {
+  font-size: 1.25rem;
+}
+
+.prose-msg h3 {
+  font-size: 1.125rem;
+}
+
+.prose-msg ul,
+.prose-msg ol {
+  margin: 1rem 0;
+  padding-left: 1.5rem;
+}
+
+.prose-msg ul {
+  list-style-type: disc;
+}
+
+.prose-msg ol {
+  list-style-type: decimal;
+}
+
+.prose-msg li {
+  margin: 0.5rem 0;
+  line-height: 1.6;
+}
+
+.prose-msg li::marker {
+  color: var(--primary-40);
+}
+
+.prose-msg strong {
+  font-weight: 600;
+  color: var(--gray-900);
+}
+
+.prose-msg a {
+  color: var(--zededa-cyan);
+  font-weight: 500;
+}
+
+.prose-msg a:hover {
+  color: var(--zededa-cyan-hover);
+  text-decoration: underline;
+}
+
+.prose-msg blockquote {
+  margin: 1rem 0;
+  padding: 0.5rem 1rem;
+  border-left: 4px solid var(--primary-40);
+  background: var(--gray-50);
+  border-radius: 0 8px 8px 0;
+  color: var(--gray-600);
+  font-style: italic;
+}
+
+.prose-msg code:not(pre code) {
+  background: rgba(0, 0, 0, 0.06);
+  color: var(--gray-800);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.85em;
+  font-family: 'Fira Code', ui-monospace, monospace;
+  font-weight: 600;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+:root[data-theme='dark'] .prose-msg code:not(pre code) {
+  background: var(--zededa-bg-tertiary);
+  color: var(--zededa-text-secondary);
+  border-color: var(--zededa-border-dark);
+}
+
+.prose-msg table {
+  display: table;
+  border-collapse: collapse;
+  width: 100% !important; /* beat any ancestor rule that lets tables shrink */
+  min-width: 100%;
+  margin: 0; /* wrapper supplies the outer margin + border */
+  font-size: 0.92em;
+}
+
+.prose-msg th,
+.prose-msg td {
+  border: 1px solid var(--gray-200);
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+}
+
+.prose-msg th {
+  background: var(--gray-100);
+  font-weight: 700;
+  color: var(--gray-800);
+}
+
+:root[data-theme='dark'] .prose-msg th {
+  background: var(--zededa-bg-tertiary);
+  color: var(--zededa-text-primary);
+  border-color: var(--zededa-border-dark);
+}
+
+:root[data-theme='dark'] .prose-msg td {
+  color: var(--zededa-text-secondary);
+  border-color: var(--zededa-border-dark);
+}
+
+/* Code block palette — explicit, not theme-flipping, so contrast is
+   guaranteed in both light and dark modes. Overrides anything from
+   highlight.js's atom-one-dark import. */
+.code-block {
+  background: #0f172a; /* slate-900 */
+  border: 1px solid rgba(148, 163, 184, 0.15); /* slate-400 @ 15% */
+  border-radius: 12px;
+}
+
+/* High specificity + !important beats the atom-one-dark stylesheet
+   regardless of import order in the final bundle. */
+.code-block pre,
+.code-block code,
+.code-block .hljs {
+  background: transparent !important;
+  color: #e5e7eb !important; /* very light slate */
+}
+
+/* Syntax colors — one-dark-pro palette, pushed toward higher saturation
+   so tokens remain legible on a darker slate background. */
+.code-block .hljs-keyword,
+.code-block .hljs-selector-tag,
+.code-block .hljs-built_in,
+.code-block .hljs-name,
+.code-block .hljs-tag {
+  color: #c084fc !important;
+}
+.code-block .hljs-string,
+.code-block .hljs-title,
+.code-block .hljs-section,
+.code-block .hljs-attribute,
+.code-block .hljs-literal,
+.code-block .hljs-template-tag,
+.code-block .hljs-template-variable,
+.code-block .hljs-type,
+.code-block .hljs-addition {
+  color: #86efac !important;
+}
+.code-block .hljs-number,
+.code-block .hljs-symbol,
+.code-block .hljs-bullet,
+.code-block .hljs-link,
+.code-block .hljs-meta,
+.code-block .hljs-selector-id,
+.code-block .hljs-selector-class {
+  color: #fbbf24 !important;
+}
+.code-block .hljs-comment,
+.code-block .hljs-quote,
+.code-block .hljs-deletion {
+  color: #94a3b8 !important;
+  font-style: italic;
+}
+.code-block .hljs-function,
+.code-block .hljs-class .hljs-title {
+  color: #93c5fd !important;
+}
+.code-block .hljs-variable,
+.code-block .hljs-attr,
+.code-block .hljs-params {
+  color: #fcd34d !important;
+}

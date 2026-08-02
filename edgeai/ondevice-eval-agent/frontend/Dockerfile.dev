@@ -1,0 +1,19 @@
+# Dev-only image: Vite dev server with HMR.
+# For prod you'd do a `pnpm build` + nginx stage instead.
+FROM node:20-alpine
+
+RUN corepack enable
+
+WORKDIR /app
+
+# Copy manifest only so `docker build` caches deps across source changes.
+COPY package.json ./
+RUN pnpm install --no-frozen-lockfile
+
+# Source is bind-mounted at runtime for HMR; this COPY is a fallback
+# for `docker run` without a volume.
+COPY . .
+
+EXPOSE 5173
+
+CMD ["pnpm", "dev"]
